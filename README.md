@@ -1,7 +1,66 @@
 # `go2chef`: "just enough Go to get to Chef"
 
 ## What is `go2chef`?
-`go2chef` is a Go tool for bootstrapping Chef installations in a flexible and self-contained way. With `go2chef`, our goal is to make bootstrapping any node in a Chef deployment as simple as "get `go2chef` onto a machine and run it.
+`go2chef` is a Go tool for bootstrapping Chef installations in a flexible and self-contained way. With `go2chef`, our goal is to make bootstrapping any node in a Chef deployment as simple as "get `go2chef` onto a machine and run it"
+
+## Quickstart Example
+
+### Building
+
+Build `go2chef` using `make` on Unix platforms:
+
+```
+$ make all		# build all variants to build/$GOOS/$GOARCH/go2chef
+$ make linux		# ...or build platform-specific binaries
+$ make darwin
+$ make windows
+```
+
+On Windows, just build it using `go build`:
+
+```
+PS> mkdir build/windows/amd64
+PS> go build -o build/windows/amd64/go2chef.exe ./bin
+```
+
+### Configuring
+
+Create a configuration file. For example, to install Chef and then download and install a custom `chefctl.rb` bundle from a tarball on Fedora:
+
+```
+{
+  "steps": [
+    {
+      "type": "go2chef.step.install.linux.dnf",
+      "name": "install chef",
+      "version": "15.2.20-1.el7.x86_64",
+      "source": {
+        "type": "go2chef.source.http",
+        "url": "https://packages.chef.io/files/stable/chef/15.2.20/el/8/chef-15.2.20-1.el7.x86_64.rpm"
+      }
+    },
+    {
+      "type": "go2chef.step.bundle",
+      "name": "install chefctl",
+      "source": {
+        "type": "go2chef.source.local",
+        "path": "./chefctl.tar.gz",
+        "archive": true
+      }
+    }
+  ]
+}
+```
+
+### Executing
+
+1. Copy the appropriate binary from `build/$GOOS/$GOARCH/go2chef`, the config file, and the `chefctl` bundle to a single directory on the target host
+2. Execute `go2chef` with the config
+
+   ```
+   $ cd path/to/copy
+   $ ./go2chef --local-config config.json
+   ```
 
 ## Design
 

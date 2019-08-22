@@ -1,6 +1,15 @@
 {
   "steps": [
     {
+      "type": "go2chef.step.install.linux.dnf",
+      "name": "install chef",
+      "version": "15.2.20-1.el7.x86_64",
+      "source": {
+        "type": "go2chef.source.http",
+        "url": "https://packages.chef.io/files/stable/chef/15.2.20/el/8/chef-15.2.20-1.el7.x86_64.rpm"
+      }
+    },
+    {
       "type": "go2chef.step.bundle",
       "name": "install chefctl",
       "source": {
@@ -10,12 +19,20 @@
       }
     },
     {
-      "type": "go2chef.step.install.linux.dnf",
-      "name": "install chef",
-      "version": "15.2.20-1.el7.x86_64",
+      "type": "go2chef.step.bundle",
+      "name": "install chef repo",
       "source": {
-        "type": "go2chef.source.http",
-        "url": "https://packages.chef.io/files/stable/chef/15.2.20/el/8/chef-15.2.20-1.el7.x86_64.rpm"
+        "type": "go2chef.source.local",
+        "path": "./chefrepo.tar.gz",
+        "archive": true
+      }
+    },
+    {
+      "type": "go2chef.step.command",
+      "name": "execute chefctl",
+      "command": ["/usr/local/bin/chefctl", "-iv"],
+      "env": {
+        "CHEF_LICENSE": "accept"
       }
     }
   ]

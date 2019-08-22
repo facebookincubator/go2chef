@@ -1,17 +1,3 @@
-# Copyright 2013-present Facebook
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 # This config file is located at /etc/chefctl-config.rb
 # You can change this location by passing `-C/--config` to `chefctl`
 # Default options and descriptions are in comments below.
@@ -20,16 +6,24 @@
 #color false
 
 # Whether or not chefctl should provide verbose output.
-#verbose false
+verbose false
 
 # The chef-client process to use.
-#chef_client '/opt/chef/bin/chef-client'
+if Dir.exist? '/opt/chef'
+    chef_client '/opt/chef/bin/chef-client'
+elsif Dir.exist? '/opt/chefdk'
+    chef_client '/opt/chefdk/bin/chef-client'
+end
 
 # Whether or not chef-client should provide debug output.
 #debug false
 
 # Default options to pass to chef-client.
-#chef_options ['--no-fork']
+chef_options [
+    '--no-fork',
+    '-c', '/etc/chef/client.rb',
+    '-z',
+]
 
 # Whether or not to provide human-readable output.
 #human false
@@ -37,7 +31,7 @@
 # If set, ignore the splay and stop pending chefctl processes before
 # running. This is intended for interactive runs of chef
 # (i.e. started by a human).
-#immediate false
+immediate false
 
 # The lock file to use for chefctl.
 #lock_file '/var/lock/subsys/chefctl'

@@ -14,7 +14,6 @@ import (
 
 	"github.com/facebookincubator/go2chef"
 	"github.com/mitchellh/mapstructure"
-	"github.com/oko/logif"
 )
 
 const TypeName = "go2chef.step.bundle"
@@ -24,7 +23,7 @@ const TypeName = "go2chef.step.bundle"
 type Bundle struct {
 	BundleName     string `mapstructure:"name"`
 	source         go2chef.Source
-	logger         logif.Logger
+	logger         go2chef.Logger
 	downloadPath   string
 	ConfigName     string `mapstructure:"config_name"`
 	TimeoutSeconds int    `mapstructure:"timeout_seconds"`
@@ -90,6 +89,7 @@ func (b *Bundle) Execute() error {
 		}
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
+		cmd.Dir = b.downloadPath
 
 		if err := cmd.Run(); err != nil {
 			return err
