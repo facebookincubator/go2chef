@@ -1,0 +1,22 @@
+{
+  "steps": [
+    {
+      "type": "go2chef.step.bundle",
+      "name": "whoami exec",
+      "source": {
+        "type": "go2chef.source.local",
+        "path": "./whoami_exec.tar.gz",
+        "archive": true
+      }
+    },
+    {
+      "type": "go2chef.step.install.darwin.pkg",
+      "name": "install chef",
+      "is_dmg": true,
+      "source": {
+        "type": "go2chef.source.http",
+        "url": "https://packages.chef.io/files/stable/chef/15.2.20/mac_os_x/10.14/chef-15.2.20-1.dmg"
+      }
+    }
+  ]
+}

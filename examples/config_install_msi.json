@@ -1,0 +1,21 @@
+{
+  "steps": [
+    {
+      "type": "go2chef.step.bundle",
+      "name": "whoami exec",
+      "source": {
+        "type": "go2chef.source.local",
+        "path": "./whoami_exec.tar.gz",
+        "archive": true
+      }
+    },
+    {
+      "type": "go2chef.step.install.windows.msi",
+      "name": "install chef",
+      "source": {
+        "type": "go2chef.source.http",
+        "url": "https://packages.chef.io/files/stable/chef/15.2.20/windows/2019/chef-client-15.2.20-1-x64.msi"
+      }
+    }
+  ]
+}
