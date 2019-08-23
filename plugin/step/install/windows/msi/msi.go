@@ -1,16 +1,14 @@
 package msi
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
-	"fmt"
 	"io/ioutil"
-	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
 	"time"
+
+	"github.com/facebookincubator/go2chef/util/temp"
 
 	"github.com/facebookincubator/go2chef/util"
 
@@ -50,7 +48,7 @@ func (s *Step) Download() error {
 		return nil
 	}
 
-	tmpdir, err := ioutil.TempDir("", "go2chef-install")
+	tmpdir, err := temp.TempDir("", "go2chef-install")
 	if err != nil {
 		return err
 	}
@@ -73,7 +71,7 @@ func (s *Step) Execute() error {
 	defer cancel()
 
 	// create a logfile for MSIEXEC
-	logfile, err := ioutil.TempFile("", "")
+	logfile, err := temp.TempFile("", "")
 	if err != nil {
 		return err
 	}
@@ -137,55 +135,4 @@ func (s *Step) findMSI() (string, error) {
 		return "", err
 	}
 	return util.MatchPath(s.downloadPath, re)
-}
-
-func getInstalledPrograms() ([]string, error) {
-	var buf bytes.Buffer
-	cmd := exec.CommandContext(
-		context.Background(),
-		"powershell.exe",
-		"-Command",
-		`Get-ChildItem "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall" | % { Get-ItemProperty $_.PSPath -Name DisplayName | Select -Property DisplayName } | Sort-Object -Property DisplayName | ConvertTo-Json`,
-	)
-	cmd.Stdout = &buf
-	cmd.Stderr = os.Stderr
-
-	if err := cmd.Run(); err != nil {
-		return nil, err
-	}
-
-	data := make([]struct {
-		DisplayName string
-	}, 0)
-
-	if err := json.Unmarshal(buf.Bytes(), data); err != nil {
-		return nil, err
-	}
-
-	output := make([]string, len(data))
-	for _, d := range data {
-		output = append(output, d.DisplayName)
-	}
-	return output, nil
-}
-
-func isChefInstalled(program, version string) (bool, error) {
-	re, err := regexp.Compile(
-		fmt.Sprintf("^%s %s$", program, version),
-	)
-	if err != nil {
-		return false, err
-	}
-
-	progs, err := getInstalledPrograms()
-	if err != nil {
-		return false, err
-	}
-	for _, prog := range progs {
-		if re.MatchString(prog) {
-			return true, nil
-		}
-	}
-
-	return false, nil
 }

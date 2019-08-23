@@ -10,6 +10,8 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/facebookincubator/go2chef/util/temp"
+
 	"github.com/facebookincubator/go2chef/util"
 
 	"github.com/mitchellh/mapstructure"
@@ -59,7 +61,7 @@ func (s *Step) Download() error {
 		return nil
 	}
 
-	tmpdir, err := ioutil.TempDir("", "go2chef-install")
+	tmpdir, err := temp.TempDir("", "go2chef-install")
 	if err != nil {
 		return err
 	}
@@ -169,7 +171,7 @@ func (s *Step) findDMG() (string, error) {
 func (s *Step) mountDMG(dmg string) error {
 	ctx := context.Background()
 
-	tmpdir, err := ioutil.TempDir("", "")
+	tmpdir, err := temp.TempDir("", "")
 	if err != nil {
 		return err
 	}

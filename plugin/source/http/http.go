@@ -8,12 +8,13 @@ package http
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"mime"
 	"net/http"
 	"os"
 	"path"
 	"path/filepath"
+
+	"github.com/facebookincubator/go2chef/util/temp"
 
 	"github.com/facebookincubator/go2chef"
 	"github.com/mholt/archiver"
@@ -125,7 +126,7 @@ func (s *Source) DownloadToPath(dlPath string) (err error) {
 		  decompress that archive into the destination.
 		*/
 		s.logger.D(1).Debugf("%s: archive mode enabled", s.Name())
-		tmpfile, err := ioutil.TempFile("", "go2chef-src-http-*-"+outputFilename)
+		tmpfile, err := temp.TempFile("", "go2chef-src-http-*-"+outputFilename)
 		defer func() { _ = tmpfile.Close() }()
 		if err != nil {
 			return err

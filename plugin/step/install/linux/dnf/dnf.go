@@ -19,13 +19,14 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/facebookincubator/go2chef/util/temp"
 
 	"github.com/facebookincubator/go2chef/util"
 
@@ -84,7 +85,7 @@ func (s *Step) Download() error {
 		return nil
 	}
 
-	tmpdir, err := ioutil.TempDir("", "go2chef-install")
+	tmpdir, err := temp.TempDir("", "go2chef-install")
 	if err != nil {
 		return err
 	}

@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/facebookincubator/go2chef"
+	"github.com/facebookincubator/go2chef/util/temp"
 	"github.com/mitchellh/mapstructure"
 )
 
@@ -65,7 +66,7 @@ func (s *Step) Download() error {
 		return nil
 	}
 
-	tmpdir, err := ioutil.TempDir("", "go2chef-install")
+	tmpdir, err := temp.TempDir("", "go2chef-install")
 	if err != nil {
 		return err
 	}

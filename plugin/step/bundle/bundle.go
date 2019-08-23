@@ -2,13 +2,14 @@ package bundle
 
 import (
 	"context"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
 	"time"
+
+	"github.com/facebookincubator/go2chef/util/temp"
 
 	"github.com/facebookincubator/go2chef/util"
 
@@ -52,7 +53,7 @@ func (b *Bundle) SetName(n string) {
 func (b *Bundle) Download() error {
 	b.logger.D(2).Debugf("%s: downloading bundle", b.Name())
 
-	tmpdir, err := ioutil.TempDir("", "go2chef-bundle")
+	tmpdir, err := temp.TempDir("", "go2chef-bundle")
 	if err != nil {
 		return err
 	}

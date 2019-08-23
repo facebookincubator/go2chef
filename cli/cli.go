@@ -4,6 +4,8 @@ import (
 	"log"
 	"strconv"
 
+	"github.com/facebookincubator/go2chef/util/temp"
+
 	"github.com/facebookincubator/go2chef"
 	"github.com/facebookincubator/go2chef/plugin/logger/stdlib"
 	"github.com/oko/logif"
@@ -26,6 +28,7 @@ type Go2ChefCLI struct {
 	logDebugLevel       int
 	logVerboseLevel     int
 	disableStdlibLogger bool
+	preserveTemp        bool
 }
 
 type Option func(cli *Go2ChefCLI)
@@ -52,6 +55,7 @@ func NewGo2ChefCLI(opts ...Option) *Go2ChefCLI {
 	cli.flags.StringVarP(&cli.configSourceName, "config-source", "C", DefaultConfigSource, "name of the configuration source to use")
 	cli.flags.StringVarP(&cli.logLevel, "log-level", "l", logLevel, "log level")
 	cli.flags.BoolVar(&cli.disableStdlibLogger, "disable-stdlib-logger", false, "disable the stdlib logger")
+	cli.flags.BoolVar(&cli.preserveTemp, "preserve-temp", false, "preserve temporary directories from this run")
 	return cli
 }
 
@@ -96,6 +100,8 @@ func (g *Go2ChefCLI) Run(argv []string) int {
 		Event:     "LOGGING_INITIALIZED",
 		Component: "go2chef.cli",
 	})
+
+	defer temp.Cleanup(g.preserveTemp)
 
 	for i, step := range cfg.Steps {
 		eventStartStep(i)
