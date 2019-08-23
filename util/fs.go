@@ -7,7 +7,7 @@ import (
 	"sort"
 )
 
-// MatchPath finds the first filename matching regex matching a regexp
+// MatchPath finds the first filename matching a regexp in dir
 func MatchPath(dir string, re *regexp.Regexp) (string, error) {
 	matches, err := MatchPaths(dir, re)
 	if err != nil {
@@ -20,7 +20,7 @@ func MatchPath(dir string, re *regexp.Regexp) (string, error) {
 	return matches[0], nil
 }
 
-// MatchPaths matches a set of files
+// MatchPaths finds all filenames matching a regexp in dir (non-recursive)
 func MatchPaths(dir string, re *regexp.Regexp) ([]string, error) {
 
 	dirEntries, err := ioutil.ReadDir(dir)
