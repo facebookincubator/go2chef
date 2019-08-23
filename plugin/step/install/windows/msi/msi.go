@@ -136,7 +136,7 @@ func (s *Step) findMSI() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return util.MatchFile(s.downloadPath, re)
+	return util.MatchPath(s.downloadPath, re)
 }
 
 func getInstalledPrograms() ([]string, error) {

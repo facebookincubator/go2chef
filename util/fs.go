@@ -7,10 +7,25 @@ import (
 	"sort"
 )
 
-func MatchFile(dir string, re *regexp.Regexp) (string, error) {
-	dirEntries, err := ioutil.ReadDir(dir)
+// MatchPath finds the first filename matching regex matching a regexp
+func MatchPath(dir string, re *regexp.Regexp) (string, error) {
+	matches, err := MatchPaths(dir, re)
 	if err != nil {
 		return "", err
+	}
+	if len(matches) < 1 {
+		return "", os.ErrNotExist
+	}
+	sort.Strings(matches)
+	return matches[0], nil
+}
+
+// MatchPaths matches a set of files
+func MatchPaths(dir string, re *regexp.Regexp) ([]string, error) {
+
+	dirEntries, err := ioutil.ReadDir(dir)
+	if err != nil {
+		return nil, err
 	}
 
 	matches := make([]string, 0)
@@ -20,13 +35,7 @@ func MatchFile(dir string, re *regexp.Regexp) (string, error) {
 		}
 	}
 
-	if len(matches) < 1 {
-		return "", os.ErrNotExist
-	}
-
-	sort.Strings(matches)
-
-	return matches[0], nil
+	return matches, nil
 }
 
 func PathExists(path string) bool {
