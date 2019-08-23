@@ -186,7 +186,7 @@ func init() {
 }
 
 func (s *Step) findRPM() (string, error) {
-	return util.MatchFile(s.downloadPath, s.packageRegex)
+	return util.MatchPath(s.downloadPath, s.packageRegex)
 }
 
 func (s *Step) checkInstalled() error {
