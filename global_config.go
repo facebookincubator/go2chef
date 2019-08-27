@@ -39,7 +39,7 @@ func generateGlobalConfig(parsed *globalConfig) (*GlobalConfig, error) {
 	if parsed.Certificates.AdditionalCAs != nil {
 		for _, ca := range parsed.Certificates.AdditionalCAs {
 			if ok := sysCAs.AppendCertsFromPEM([]byte(ca)); !ok {
-				return nil, fmt.Errorf("failed to append certificate with content `%s` to CA pool")
+				return nil, fmt.Errorf("failed to append certificate with content `%s` to CA pool", ca)
 			}
 		}
 	}
@@ -51,7 +51,7 @@ func generateGlobalConfig(parsed *globalConfig) (*GlobalConfig, error) {
 				return nil, err
 			}
 			if ok := sysCAs.AppendCertsFromPEM(data); !ok {
-				return nil, fmt.Errorf("failed to append certificate from file `%s` to CA pool")
+				return nil, fmt.Errorf("failed to append certificate from file `%s` to CA pool", caPath)
 			}
 		}
 	}
