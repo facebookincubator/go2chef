@@ -99,7 +99,7 @@ func Loader(config map[string]interface{}) (go2chef.Logger, error) {
 	parse := Config{}
 	ret := &Logger{
 		name,
-		log.New(os.Stderr, "GO2CHEF", log.LstdFlags),
+		log.New(os.Stderr, "GO2CHEF ", log.LstdFlags),
 		go2chef.LogLevelInfo,
 		0,
 	}

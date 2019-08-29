@@ -15,7 +15,7 @@ var (
 	// DefaultConfigSource sets the go2chef CLI default configuration source type
 	DefaultConfigSource = "go2chef.config_source.local"
 	// DefaultLogLevel sets the go2chef CLI default logging level
-	DefaultLogLevel = go2chef.LogLevelInfo
+	DefaultLogLevel = go2chef.LogLevelDebug
 	logger          go2chef.Logger
 )
 
@@ -28,7 +28,6 @@ type Go2ChefCLI struct {
 	configSourceName    string
 	logLevel            string
 	logDebugLevel       int
-	logVerboseLevel     int
 	disableStdlibLogger bool
 	preserveTemp        bool
 }

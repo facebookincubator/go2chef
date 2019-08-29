@@ -14,6 +14,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"runtime"
 
 	"github.com/mitchellh/mapstructure"
 )
@@ -32,8 +33,12 @@ func generateGlobalConfig(parsed *globalConfig) (*GlobalConfig, error) {
 	  CONFIGURE CERTIFICATE AUTHORITIES
 	*/
 	sysCAs, err := x509.SystemCertPool()
-	if err != nil {
+	if err != nil && runtime.GOOS != "windows" {
 		return nil, err
+	} else if runtime.GOOS == "windows" {
+		// Ahhh, windows. Need we say more?
+		// https://github.com/golang/go/issues/16736
+		sysCAs = x509.NewCertPool()
 	}
 
 	if parsed.Certificates.AdditionalCAs != nil {
@@ -74,6 +79,10 @@ func (g *GlobalConfig) GetCertificateAuthorities() *x509.CertPool {
 // GetHTTPClientWithCAs gets an HTTP client preconfigured to trust the
 // certificate authorities specified in the global config
 func (g *GlobalConfig) GetHTTPClientWithCAs() *http.Client {
+	// https://github.com/golang/go/issues/16736
+	if runtime.GOOS == "windows" {
+		return &http.Client{}
+	}
 	return &http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{

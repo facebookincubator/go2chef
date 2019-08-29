@@ -12,7 +12,7 @@ var (
 	AutoRegisterPlugins = true
 	// EarlyLogger is the logger used for pre-config logging. You can
 	// substitute it if your use case requires.
-	EarlyLogger = log.New(os.Stderr, "GO2CHEF", log.LstdFlags)
+	EarlyLogger = log.New(os.Stderr, "GO2CHEF ", log.LstdFlags)
 )
 
 var (
