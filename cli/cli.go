@@ -8,13 +8,12 @@ import (
 
 	"github.com/facebookincubator/go2chef"
 	"github.com/facebookincubator/go2chef/plugin/logger/stdlib"
-	"github.com/oko/logif"
 	"github.com/spf13/pflag"
 )
 
 var (
 	DefaultConfigSource = "go2chef.config_source.local"
-	DefaultLogLevel     = logif.LevelInfo
+	DefaultLogLevel     = go2chef.LogLevelInfo
 	logger              go2chef.Logger
 )
 
@@ -48,7 +47,7 @@ func NewGo2ChefCLI(opts ...Option) *Go2ChefCLI {
 		opt(cli)
 	}
 
-	logLevel, err := logif.LogLevelString(DefaultLogLevel)
+	logLevel, err := go2chef.LogLevelToString(DefaultLogLevel)
 	if err != nil {
 		panic("invalid go2chef.cli.DefaultLogLevel compiled in")
 	}
@@ -69,20 +68,17 @@ func (g *Go2ChefCLI) Run(argv []string) int {
 	}
 
 	// Pull in early log level config from flags
-	logLevel, err := logif.ParseLogLevel(g.logLevel)
+	logLevel, err := go2chef.StringToLogLevel(g.logLevel)
 	if err != nil {
-		go2chef.EarlyLogger.Errorf("--log-level/-l value `%s` is invalid: %s", g.logLevel, err)
+		go2chef.EarlyLogger.Printf("--log-level/-l value `%s` is invalid: %s", g.logLevel, err)
 		return 1
 	}
-	go2chef.EarlyLogger.SetLevel(logLevel)
-	go2chef.EarlyLogger.SetVerbosity(g.logVerboseLevel)
-	go2chef.EarlyLogger.SetDebugging(g.logDebugLevel)
 
 	// Add stdlib early logger if not disabled explicitly. This
 	// ensures that by default you'll get *some* logging interactively.
 	var early go2chef.Logger
 	if !g.disableStdlibLogger {
-		early = stdlib.NewFromExistingStdlibLogger(go2chef.EarlyLogger)
+		early = stdlib.NewFromLogger(go2chef.EarlyLogger, logLevel, g.logDebugLevel)
 	}
 
 	// Load actual configuration

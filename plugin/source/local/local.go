@@ -41,14 +41,14 @@ func (s *Source) DownloadToPath(dlPath string) error {
 	if err := os.MkdirAll(dlPath, 0755); err != nil {
 		return err
 	}
-	s.logger.Debugf("copy directory %s is ready", dlPath)
+	s.logger.Debugf(0, "copy directory %s is ready", dlPath)
 
 	if !s.Archive {
 		if err := copy.Copy(s.Path, dlPath); err != nil {
 			s.logger.Errorf("failed to copy directory %s to %s", s.Path, dlPath)
 			return err
 		}
-		s.logger.Debugf("copied directory %s to %s", s.Path, dlPath)
+		s.logger.Debugf(0, "copied directory %s to %s", s.Path, dlPath)
 	} else {
 		if err := archiver.Unarchive(s.Path, dlPath); err != nil {
 			s.logger.Errorf("failed to unarchive %s to dir %s", s.Path, dlPath)

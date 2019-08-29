@@ -49,7 +49,7 @@ var Global = &GlobalConfig{}
 
 // GetConfig loads and resolves the configuration
 func GetConfig(configSourceName string, earlyLogger Logger) (*Config, error) {
-	EarlyLogger.D(0).Debugf("loading config from source %s", configSourceName)
+	EarlyLogger.Printf("loading config from source %s", configSourceName)
 
 	// Get the chosen configuration source and read
 	configSource := GetConfigSource(configSourceName)

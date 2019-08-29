@@ -51,7 +51,7 @@ func (b *Bundle) SetName(n string) {
 
 // Download fetches resources required for this bundle's execution
 func (b *Bundle) Download() error {
-	b.logger.D(2).Debugf("%s: downloading bundle", b.Name())
+	b.logger.Debugf(1, "%s: downloading bundle", b.Name())
 
 	tmpdir, err := temp.TempDir("", "go2chef-bundle")
 	if err != nil {
@@ -61,7 +61,7 @@ func (b *Bundle) Download() error {
 		return err
 	}
 	b.downloadPath = tmpdir
-	b.logger.D(2).Debugf("%s: downloaded bundle to %s", b.Name(), b.downloadPath)
+	b.logger.Debugf(1, "%s: downloaded bundle to %s", b.Name(), b.downloadPath)
 	return nil
 }
 

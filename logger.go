@@ -1,7 +1,8 @@
 package go2chef
 
 import (
-	"github.com/oko/logif"
+	"fmt"
+	"strings"
 )
 
 // Event provides a more structured way to log information from
@@ -21,10 +22,48 @@ func NewEvent(event, component, message string) *Event {
 	}
 }
 
+const (
+	LogLevelError = iota
+	LogLevelInfo
+	LogLevelDebug
+)
+
+func StringToLogLevel(s string) (int, error) {
+	switch strings.ToLower(s) {
+	case "debug":
+		return LogLevelDebug, nil
+	case "info":
+		return LogLevelInfo, nil
+	case "error":
+		return LogLevelError, nil
+	default:
+		return LogLevelDebug, fmt.Errorf("log level %s does not exist", s)
+	}
+}
+
+func LogLevelToString(l int) (string, error) {
+	switch l {
+	case LogLevelDebug:
+		return "DEBUG", nil
+	case LogLevelInfo:
+		return "INFO", nil
+	case LogLevelError:
+		return "ERROR", nil
+	default:
+		return "", fmt.Errorf("log level %d is not valid", l)
+	}
+}
+
 // Logger defines the interface for logging components.
 type Logger interface {
 	Component
-	logif.Logger
+
+	SetLevel(lvl int)
+	SetDebug(dbg int)
+	Debugf(dbg int, fmt string, args ...interface{})
+	Infof(fmt string, args ...interface{})
+	Errorf(fmt string, args ...interface{})
+
 	// WriteEvent writes an event object to this logger
 	WriteEvent(e *Event)
 	// Shutdown allows go2chef to wait for loggers to finish writes

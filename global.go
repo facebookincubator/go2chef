@@ -2,9 +2,8 @@ package go2chef
 
 import (
 	"errors"
+	"log"
 	"os"
-
-	"github.com/oko/logif"
 )
 
 var (
@@ -13,7 +12,7 @@ var (
 	AutoRegisterPlugins = true
 	// EarlyLogger is the logger used for pre-config logging. You can
 	// substitute it if your use case requires.
-	EarlyLogger = &logif.StdlibLogger{}
+	EarlyLogger = log.New(os.Stderr, "GO2CHEF", log.LstdFlags)
 )
 
 var (

@@ -2,11 +2,11 @@ package group
 
 import (
 	"fmt"
-	"github.com/facebookincubator/go2chef"
-	"github.com/mitchellh/mapstructure"
-	"github.com/oko/logif"
 	"log"
 	"sync"
+
+	"github.com/facebookincubator/go2chef"
+	"github.com/mitchellh/mapstructure"
 )
 
 const TypeName = "go2chef.step.group"
@@ -103,8 +103,9 @@ func Loader(config map[string]interface{}) (go2chef.Step, error) {
 	}{
 		Steps: make([]map[string]interface{}, 0),
 	}
+	logger := go2chef.GetGlobalLogger()
 	if err := mapstructure.Decode(config, &structure); err != nil {
-		logif.Errorf("stepGroupInit() failed to decode config map")
+		logger.Errorf("failed to parse configuration for %s: %s", TypeName, err)
 		return nil, err
 	}
 

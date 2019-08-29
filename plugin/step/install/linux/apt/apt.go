@@ -99,7 +99,7 @@ func (s *Step) Execute() error {
 				s.logger.Infof("dpkg-query exited with code %d", err.(*exec.ExitError).ExitCode())
 				installed = false
 			case *go2chef.ErrChefAlreadyInstalled:
-				s.logger.Warningf("%s", err)
+				s.logger.Infof("%s", err)
 				installed = true
 			}
 		}
@@ -108,7 +108,7 @@ func (s *Step) Execute() error {
 	if !installed {
 		return s.installChef(installPackage)
 	}
-	s.logger.Warningf("Chef version specified is already installed, not reinstalling")
+	s.logger.Infof("Chef version specified is already installed, not reinstalling")
 	return nil
 }
 

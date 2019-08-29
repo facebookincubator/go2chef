@@ -116,7 +116,7 @@ func (s *Step) Execute() error {
 			case *exec.ExitError:
 				installed = false
 			case *go2chef.ErrChefAlreadyInstalled:
-				s.logger.Warningf("%s", err)
+				s.logger.Infof("%s", err)
 				installed = true
 			}
 		}
@@ -128,7 +128,7 @@ func (s *Step) Execute() error {
 		}
 		return s.installChefDNF(installPackage)
 	}
-	s.logger.Warningf("Chef version specified is already installed, not reinstalling")
+	s.logger.Infof("Chef version specified is already installed, not reinstalling")
 	return nil
 }
 

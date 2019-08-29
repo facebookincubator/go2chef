@@ -73,7 +73,7 @@ func (s *Source) DownloadToPath(dlPath string) (err error) {
 	if ex, err := go2chef.PathExists(dlPath); err != nil {
 		return err
 	} else if !ex {
-		s.logger.D(3).Debugf("creating download directory %s", dlPath)
+		s.logger.Debugf(1, "creating download directory %s", dlPath)
 		if err := os.MkdirAll(dlPath, 0755); err != nil {
 			return err
 		}
@@ -90,7 +90,7 @@ func (s *Source) DownloadToPath(dlPath string) (err error) {
 	}
 	defer func() { _ = resp.Body.Close() }()
 
-	s.logger.D(2).Debugf("%s: HTTP %s %s => %d %s", s.Name(), s.Method, s.URL, resp.StatusCode, http.StatusText(resp.StatusCode))
+	s.logger.Debugf(1, "%s: HTTP %s %s => %d %s", s.Name(), s.Method, s.URL, resp.StatusCode, http.StatusText(resp.StatusCode))
 
 	if !s.checkStatusCode(resp) {
 		return fmt.Errorf("non-matching status code: %d", resp.StatusCode)
@@ -125,7 +125,7 @@ func (s *Source) DownloadToPath(dlPath string) (err error) {
 		  If the request is for an archive (using `{"archive": true}` in config) then
 		  decompress that archive into the destination.
 		*/
-		s.logger.D(1).Debugf("%s: archive mode enabled", s.Name())
+		s.logger.Debugf(1, "%s: archive mode enabled", s.Name())
 		tmpfile, err := temp.TempFile("", "go2chef-src-http-*-"+outputFilename)
 		defer func() { _ = tmpfile.Close() }()
 		if err != nil {
@@ -134,7 +134,7 @@ func (s *Source) DownloadToPath(dlPath string) (err error) {
 		if _, err = io.Copy(tmpfile, resp.Body); err != nil {
 			return err
 		}
-		s.logger.D(2).Debugf("%s: extracting %s to %s", s.Name(), tmpfile.Name(), dlPath)
+		s.logger.Debugf(1, "%s: extracting %s to %s", s.Name(), tmpfile.Name(), dlPath)
 
 		if err := archiver.Unarchive(tmpfile.Name(), dlPath); err != nil {
 			return err

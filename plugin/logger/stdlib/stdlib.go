@@ -1,9 +1,11 @@
 package stdlib
 
 import (
+	"log"
+	"os"
+
 	"github.com/facebookincubator/go2chef"
 	"github.com/mitchellh/mapstructure"
-	"github.com/oko/logif"
 )
 
 const TypeName = "go2chef.logger.stdlib"
@@ -11,16 +13,23 @@ const TypeName = "go2chef.logger.stdlib"
 // Logger represents a logger that just sends output to the
 // default stdlib log library with some level info.
 type Logger struct {
-	*logif.StdlibLogger
 	LoggerName string
+	log        *log.Logger
+	level      int
+	debug      int
 }
 
-// NewFromExistingStdlibLogger creates a new StdlibLogger from an existing
-// logif.StdlibLogger (for use during the pre-config-loading phase)
-func NewFromExistingStdlibLogger(logger *logif.StdlibLogger) *Logger {
+type Config struct {
+	Level     string
+	Debugging int
+}
+
+func NewFromLogger(l *log.Logger, level, debug int) *Logger {
 	return &Logger{
-		logger,
-		"default-go2chef-cli",
+		LoggerName: "go2chef",
+		log:        l,
+		level:      level,
+		debug:      debug,
 	}
 }
 
@@ -39,9 +48,32 @@ func (l *Logger) Type() string {
 	return TypeName
 }
 
+func (l *Logger) SetDebug(dbg int) {
+	l.debug = dbg
+}
+func (l *Logger) SetLevel(lvl int) {
+	l.level = lvl
+}
+
+func (l *Logger) Errorf(fmt string, args ...interface{}) {
+	l.log.Printf("ERROR: "+fmt, args...)
+}
+
+func (l *Logger) Infof(fmt string, args ...interface{}) {
+	if l.level >= go2chef.LogLevelInfo {
+		l.log.Printf("INFO: "+fmt, args...)
+	}
+}
+
+func (l *Logger) Debugf(dbg int, fmt string, args ...interface{}) {
+	if l.level >= go2chef.LogLevelDebug && dbg >= l.debug {
+		l.log.Printf("DEBUG: "+fmt, args...)
+	}
+}
+
 // WriteEvent writes a formatted event at INFO level
 func (l *Logger) WriteEvent(e *go2chef.Event) {
-	l.Infof("EVENT: %s in %s - %s", e.Event, e.Component, e.Message)
+	l.log.Printf("EVENT: %s in %s - %s", e.Event, e.Component, e.Message)
 }
 
 // Loader creates an StdlibLogger from a config map
@@ -50,27 +82,24 @@ func Loader(config map[string]interface{}) (go2chef.Logger, error) {
 	if err != nil {
 		return nil, err
 	}
+	parse := Config{}
 	ret := &Logger{
-		&logif.StdlibLogger{},
 		name,
+		log.New(os.Stderr, "GO2CHEF", log.LstdFlags),
+		go2chef.LogLevelInfo,
+		0,
 	}
-	parse := struct {
-		Level     string
-		Debugging int
-		Verbosity int
-	}{}
 	if err := mapstructure.Decode(config, &parse); err != nil {
 		return nil, err
 	}
-	realLevel, err := logif.ParseLogLevel(parse.Level)
+	realLevel, err := go2chef.StringToLogLevel(parse.Level)
 	if err != nil {
 		return nil, err
 	}
 
 	// set all levels based on config
 	ret.SetLevel(realLevel)
-	ret.SetDebugging(parse.Debugging)
-	ret.SetVerbosity(parse.Verbosity)
+	ret.SetDebug(parse.Debugging)
 
 	return ret, nil
 }
