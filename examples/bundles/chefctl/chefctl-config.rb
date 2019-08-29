@@ -8,11 +8,13 @@
 # Whether or not chefctl should provide verbose output.
 verbose false
 
+root_path = Gem.win_platform? ? 'C:/opscode/chef' : '/opt/chef'
+
 # The chef-client process to use.
-if Dir.exist? '/opt/chef'
-    chef_client '/opt/chef/bin/chef-client'
-elsif Dir.exist? '/opt/chefdk'
-    chef_client '/opt/chefdk/bin/chef-client'
+if Dir.exist? root_path
+  chef_client File.join(root_path, '/bin/chef-client')
+elsif Dir.exist? root_path+"dk"
+  chef_client File.join(root_path+"dk", '/bin/chef-client')
 end
 
 # Whether or not chef-client should provide debug output.
@@ -34,16 +36,16 @@ chef_options [
 immediate false
 
 # The lock file to use for chefctl.
-#lock_file '/var/lock/subsys/chefctl'
+lock_file (Gem.win_platform? ? 'C:/chef/chefctl.lock' : '/var/lock/subsys/chefctl')
 
 # How long to wait for the lock to become available.
 #lock_time 1800
 
 # Directory where per-run chef logs should be placed.
-#log_dir '/var/chef/outputs'
+log_dir (Gem.win_platform? ? 'C:/chef/outputs' : '/var/chef/outputs')
 
 # If set, will not copy chef log to stdout.
-#quiet false
+quiet false
 
 # The default splay to use. Ignored if `immediate` is set to true.
 #splay 870
@@ -63,10 +65,18 @@ immediate false
 #plugin_path '/etc/chef/chefctl_hooks.rb'
 
 # The default PATH environment variable to use for chef-client.
-#path %w{
-#  /usr/sbin
-#  /usr/bin
-#}
+puts "env", ENV.inspect
+if Gem.win_platform?
+  pth = %w{
+    C:/Windows/System32
+  }
+else
+  pth = %w{
+    /usr/sbin
+    /usr/bin
+  }
+end
+path pth
 
 # Whether or not to symlink output files for chef.cur.out and chef.last.out
 #symlink_output true

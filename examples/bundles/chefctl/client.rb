@@ -12,7 +12,7 @@ cookbook_paths = Dir.entries(cookbook_root).map { |family|
 puts cookbook_paths
 cookbook_path cookbook_paths
 node_path File.join(chef_repo_root, 'nodes')
-file_cache_path '/var/cache/chef'
+file_cache_path (Gem.win_platform? ? 'C:/chef/cache' : '/var/cache/chef')
 
 local_mode true
 chef_zero.enabled true

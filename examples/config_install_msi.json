@@ -16,6 +16,32 @@
         "type": "go2chef.source.http",
         "url": "https://packages.chef.io/files/stable/chef/15.2.20/windows/2019/chef-client-15.2.20-1-x64.msi"
       }
+    },
+    {
+      "type": "go2chef.step.bundle",
+      "name": "install chefctl",
+      "source": {
+        "type": "go2chef.source.local",
+        "path": "./chefctl.tar.gz",
+        "archive": true
+      }
+    },
+    {
+      "type": "go2chef.step.bundle",
+      "name": "install chef repo",
+      "source": {
+        "type": "go2chef.source.local",
+        "path": "./chefrepo.tar.gz",
+        "archive": true
+      }
+    },
+    {
+      "type": "go2chef.step.command",
+      "name": "execute chefctl",
+      "command": ["C:/opscode/chef/embedded/bin/ruby", "C:/Windows/System32/chefctl.rb", "-iv"],
+      "env": {
+        "CHEF_LICENSE": "accept"
+      }
     }
   ]
 }

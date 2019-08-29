@@ -17,7 +17,6 @@ module OkoChefctl
     @tempfile.write(JSON.pretty_generate(config))
     @tempfile.flush
     @tempfile.rewind
-    puts `cat #{@tempfile.path}`
 
     Chefctl::Config.chef_options << '-j' << @tempfile.path
   end
