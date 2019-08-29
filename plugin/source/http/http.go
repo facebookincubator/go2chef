@@ -21,6 +21,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
+// TypeName is the name of this source plugin
 const TypeName = "go2chef.source.http"
 
 // Source implements an HTTP source for resource downloads
@@ -126,7 +127,7 @@ func (s *Source) DownloadToPath(dlPath string) (err error) {
 		  decompress that archive into the destination.
 		*/
 		s.logger.Debugf(1, "%s: archive mode enabled", s.Name())
-		tmpfile, err := temp.TempFile("", "go2chef-src-http-*-"+outputFilename)
+		tmpfile, err := temp.File("", "go2chef-src-http-*-"+outputFilename)
 		defer func() { _ = tmpfile.Close() }()
 		if err != nil {
 			return err

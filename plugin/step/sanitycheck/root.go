@@ -15,7 +15,7 @@ var (
 // Unix superuser variables to allow testing
 var (
 	UnixSuperuserUsername = "root"
-	UnixSuperuserUid      = "0"
+	UnixSuperuserUID      = "0"
 )
 
 // EnsureSuperuser checks that we're running as superuser
@@ -28,7 +28,7 @@ func EnsureSuperuser(sc *SanityCheck) (FixFn, error) {
 		if err != nil {
 			return nil, err
 		}
-		if u.Username == UnixSuperuserUsername && u.Uid == UnixSuperuserUid {
+		if u.Username == UnixSuperuserUsername && u.Uid == UnixSuperuserUID {
 			return nil, nil
 		}
 		return nil, ErrNotSuperuser

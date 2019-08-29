@@ -17,6 +17,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
+// TypeName is the name of this step plugin
 const TypeName = "go2chef.step.bundle"
 
 // Bundle represents an executable bundle of files that
@@ -53,7 +54,7 @@ func (b *Bundle) SetName(n string) {
 func (b *Bundle) Download() error {
 	b.logger.Debugf(1, "%s: downloading bundle", b.Name())
 
-	tmpdir, err := temp.TempDir("", "go2chef-bundle")
+	tmpdir, err := temp.Dir("", "go2chef-bundle")
 	if err != nil {
 		return err
 	}
@@ -111,6 +112,7 @@ func (b *Bundle) Execute() error {
 	return nil
 }
 
+// Loader provides an instantiation function for this step
 func Loader(config map[string]interface{}) (go2chef.Step, error) {
 	source, err := go2chef.GetSourceFromStepConfig(config)
 	if err != nil {

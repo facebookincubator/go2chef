@@ -5,6 +5,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
+// TypeName is the name of the noop plugin
 const TypeName = "go2chef.examples.plugin.noop"
 
 // Step is where you should define the internal data structure
@@ -44,14 +45,14 @@ func (s *Step) Execute() error {
 	return nil
 }
 
+// Loader is the function that takes a config and generates a fully
+// configured plugin instance. This function is what's placed in the
+// plugin registry and called for each config that requests a `noop`
+// step type.
 func Loader(config map[string]interface{}) (go2chef.Step, error) {
-	// All plugin inits are passed a logger instance.
-	// Your plugin's struct should store this so you can
-	// use it in Download/Execute, rather than using `log`
-	// or other non-integrated log functionality.
-
 	// Here, we'll create a sane default instance of the plugin, and
 	// then customize it using the config map passed in from the parent.
+	// For logging, just pull go2chef.GetGlobalLogger()
 	s := &Step{
 		SName:  "noop",
 		logger: go2chef.GetGlobalLogger(),

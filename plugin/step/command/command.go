@@ -11,8 +11,10 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
+// TypeName is the name of this step plugin
 const TypeName = "go2chef.step.command"
 
+// Step implements a command execution step plugin
 type Step struct {
 	SName          string
 	Command        []string `mapstructure:"command"`
@@ -25,22 +27,28 @@ func (s *Step) String() string {
 	return "<" + TypeName + ":" + s.SName + ">"
 }
 
+// SetName sets the name of this step instance
 func (s *Step) SetName(name string) {
 	s.SName = name
 }
 
+// Name returns the name of this step instance
 func (s *Step) Name() string {
 	return s.SName
 }
 
+// Type returns the type of this step instance
 func (s *Step) Type() string {
 	return TypeName
 }
 
+// Download does nothing for this step since there's no
+// downloading to be done when running any ol' command.
 func (s *Step) Download() error {
 	return nil
 }
 
+// Execute runs the actual command.
 func (s *Step) Execute() error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(s.TimeoutSeconds)*time.Second)
 	defer cancel()
@@ -61,6 +69,7 @@ func (s *Step) Execute() error {
 	return cmd.Run()
 }
 
+// Loader provides an instantiation function for this step plugin
 func Loader(config map[string]interface{}) (go2chef.Step, error) {
 	c := &Step{
 		logger:         go2chef.GetGlobalLogger(),

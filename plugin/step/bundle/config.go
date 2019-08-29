@@ -11,7 +11,6 @@ import (
 
 // Config defines the structure of the bundle configuration file
 type Config struct {
-	bundle  *Bundle
 	Shell   string   `mapstructure:"shell"`
 	Command []string `mapstructure:"command"`
 	Timeout int      `mapstructure:"timeout"`

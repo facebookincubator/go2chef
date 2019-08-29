@@ -1,17 +1,17 @@
 /*
-	Package dnf implements a step plugin for installation of Chef on RPM-based systems.
-	It supports DNF, Yum, and direct RPM installation.
+Package dnf implements a step plugin for installation of Chef on RPM-based systems.
+It supports DNF, Yum, and direct RPM installation.
 
-	If you provide a `source` config block, this plugin will download it and search for
-	an RPM based on `package_name` (and, if specified, `version`).
+If you provide a `source` config block, this plugin will download it and search for
+an RPM based on `package_name` (and, if specified, `version`).
 
-	Example config for a Chef install
+Example config for a Chef install
 
-		{
-			"type": "go2chef.step.install.linux.dnf",
-			"name": "install chef",
-			"package_name": "chef"
-		}
+	{
+		"type": "go2chef.step.install.linux.dnf",
+		"name": "install chef",
+		"package_name": "chef"
+	}
 */
 package dnf
 
@@ -34,6 +34,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
+// TypeNames for the three variants of this step plugin
 const (
 	TypeName    = "go2chef.step.install.linux.dnf"
 	YumTypeName = "go2chef.step.install.linux.yum"
@@ -41,9 +42,11 @@ const (
 )
 
 var (
+	// DefaultPackageName is the default package name to use for Chef installation
 	DefaultPackageName = "chef"
 )
 
+// Step implements Chef installation via RHEL/Fedora DNF/YUM/RPM
 type Step struct {
 	StepName    string `mapstructure:"name"`
 	DNFBinary   string `mapstructure:"dnf_binary"`
@@ -68,24 +71,28 @@ func (s *Step) String() string {
 	return "<" + TypeName + ":" + s.StepName + ">"
 }
 
+// SetName sets the name of this step instance
 func (s *Step) SetName(str string) {
 	s.StepName = str
 }
 
+// Name gets the name of this step instance
 func (s *Step) Name() string {
 	return s.StepName
 }
 
+// Type returns the type of this step instance
 func (s *Step) Type() string {
 	return TypeName
 }
 
+// Download fetches resources required for this step's execution
 func (s *Step) Download() error {
 	if s.source == nil {
 		return nil
 	}
 
-	tmpdir, err := temp.TempDir("", "go2chef-install")
+	tmpdir, err := temp.Dir("", "go2chef-install")
 	if err != nil {
 		return err
 	}
@@ -98,6 +105,7 @@ func (s *Step) Download() error {
 	return nil
 }
 
+// Execute performs the installation
 func (s *Step) Execute() error {
 	installPackage := s.PackageName
 
@@ -132,6 +140,7 @@ func (s *Step) Execute() error {
 	return nil
 }
 
+// LoaderForBinary provides an instantiation function for this step plugin specific to the passed binary
 func LoaderForBinary(binary string) go2chef.StepLoader {
 	return func(config map[string]interface{}) (go2chef.Step, error) {
 		step := &Step{

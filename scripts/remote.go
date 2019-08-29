@@ -22,9 +22,8 @@ import (
 func binName() string {
 	if runtime.GOOS == "windows" {
 		return "go2chef.exe"
-	} else {
-		return "go2chef"
 	}
+	return "go2chef"
 }
 
 var (
@@ -148,8 +147,8 @@ func copySFTP(c *sftp.Client, tmp string, path string, mode os.FileMode) (string
 	if err != nil {
 		return "", err
 	}
-	defer f.Close()
-	f.Chmod(mode)
+	defer func() { _ = f.Close() }()
+	_ = f.Chmod(mode)
 
 	if _, err := f.Write(data); err != nil {
 		return "", err

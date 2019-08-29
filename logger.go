@@ -22,12 +22,14 @@ func NewEvent(event, component, message string) *Event {
 	}
 }
 
+// Log level constants
 const (
 	LogLevelError = iota
 	LogLevelInfo
 	LogLevelDebug
 )
 
+// StringToLogLevel translates a string to a log level
 func StringToLogLevel(s string) (int, error) {
 	switch strings.ToLower(s) {
 	case "debug":
@@ -41,6 +43,7 @@ func StringToLogLevel(s string) (int, error) {
 	}
 }
 
+// LogLevelToString translates a log level value to a string
 func LogLevelToString(l int) (string, error) {
 	switch l {
 	case LogLevelDebug:

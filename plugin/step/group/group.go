@@ -9,6 +9,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
+// TypeName is the name of this step plugin
 const TypeName = "go2chef.step.group"
 
 // StepGroup defines a step that consists of other steps
@@ -26,17 +27,17 @@ func (g *StepGroup) String() string {
 	return "<Step.Group:" + g.GroupName + ">"
 }
 
-// Name returns the name of this step
+// Name gets the name of this step instance
 func (g *StepGroup) Name() string {
 	return g.GroupName
 }
 
-// Type returns group.TypeName
+// Type returns the type of this step instance
 func (g *StepGroup) Type() string {
 	return TypeName
 }
 
-// SetName sets the name of this step
+// SetName sets the name of this step instance
 func (g *StepGroup) SetName(n string) {
 	g.GroupName = n
 }
@@ -95,6 +96,7 @@ func (g *StepGroup) Execute() (err error) {
 	return nil
 }
 
+// Loader provides an instantiation function for this step plugin
 func Loader(config map[string]interface{}) (go2chef.Step, error) {
 	// parse interior steps here
 	structure := struct {

@@ -28,7 +28,7 @@ func MatchPaths(dir string, re *regexp.Regexp) ([]string, error) {
 		return nil, err
 	}
 
-	matches := make([]string, 0)
+	var matches []string
 	for _, entry := range dirEntries {
 		if re.MatchString(entry.Name()) {
 			matches = append(matches, entry.Name())
@@ -38,6 +38,7 @@ func MatchPaths(dir string, re *regexp.Regexp) ([]string, error) {
 	return matches, nil
 }
 
+// PathExists is a simple existence check function
 func PathExists(path string) bool {
 	_, err := os.Stat(path)
 	return !os.IsNotExist(err)

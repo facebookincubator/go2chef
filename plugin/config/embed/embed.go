@@ -2,7 +2,6 @@
 Package embed implements a configuration source that can be fully compiled-in
 at build time.
 */
-
 package embed
 
 import (
@@ -10,14 +9,21 @@ import (
 	"github.com/spf13/pflag"
 )
 
+// TypeName is the name of this config source
 const TypeName = "go2chef.config_source.embed"
 
+// ConfigSource is the embedded configuration source implementation
 type ConfigSource struct{}
 
+// InitFlags initializes flags for this config source (none)
 func (c *ConfigSource) InitFlags(set *pflag.FlagSet) {}
 
+// EmbeddedConfig exposes the means for storing the embedded configuration.
+// If you want to embed configuration in some other format you can set this
+// variable in an init() function in your own package to parse/store it.
 var EmbeddedConfig = make(map[string]interface{})
 
+// ReadConfig reads the configuration source
 func (c *ConfigSource) ReadConfig() (map[string]interface{}, error) {
 	return EmbeddedConfig, nil
 }

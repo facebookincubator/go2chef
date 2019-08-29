@@ -65,6 +65,7 @@ func (m *MultiLogger) SetLevel(l int) {
 	m.level = l
 }
 
+// SetDebug sets the logger's debug level threshold
 func (m *MultiLogger) SetDebug(d int) {
 	m.debug = d
 }

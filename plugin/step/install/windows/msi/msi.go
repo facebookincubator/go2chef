@@ -17,12 +17,15 @@ import (
 	"github.com/facebookincubator/go2chef"
 )
 
+// TypeName is the name of this plugin
 const TypeName = "go2chef.step.install.windows.msi"
 
 var (
+	// DefaultPackageName sets the default package name for MSI matchign
 	DefaultPackageName = "chef"
 )
 
+// Step implements Chef installation via Windows MSI
 type Step struct {
 	StepName     string `mapstructure:"name"`
 	MSIMatch     string `mapstructure:"msi_match"`
@@ -37,18 +40,22 @@ type Step struct {
 
 func (s *Step) String() string { return "<" + TypeName + ":" + s.StepName + ">" }
 
+// SetName sets the name of this step instance
 func (s *Step) SetName(str string) { s.StepName = str }
 
+// Name gets the name of this step instance
 func (s *Step) Name() string { return s.StepName }
 
+// Type returns the type of this step instance
 func (s *Step) Type() string { return TypeName }
 
+// Download fetches resources required for this step's execution
 func (s *Step) Download() error {
 	if s.source == nil {
 		return nil
 	}
 
-	tmpdir, err := temp.TempDir("", "go2chef-install")
+	tmpdir, err := temp.Dir("", "go2chef-install")
 	if err != nil {
 		return err
 	}
@@ -61,6 +68,7 @@ func (s *Step) Download() error {
 	return nil
 }
 
+// Execute performs the installation
 func (s *Step) Execute() error {
 	msi, err := s.findMSI()
 	if err != nil {
@@ -71,7 +79,7 @@ func (s *Step) Execute() error {
 	defer cancel()
 
 	// create a logfile for MSIEXEC
-	logfile, err := temp.TempFile("", "")
+	logfile, err := temp.File("", "")
 	if err != nil {
 		return err
 	}
@@ -98,6 +106,7 @@ func (s *Step) Execute() error {
 	return nil
 }
 
+// Loader provides an instantiation function for this step plugin
 func Loader(config map[string]interface{}) (go2chef.Step, error) {
 	step := &Step{
 		StepName:              "",

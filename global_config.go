@@ -60,6 +60,7 @@ func generateGlobalConfig(parsed *globalConfig) (*GlobalConfig, error) {
 	return g, nil
 }
 
+// GlobalConfig implements go2chef's program-wide configuration settings store
 type GlobalConfig struct {
 	certPool *x509.CertPool
 }

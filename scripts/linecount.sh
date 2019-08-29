@@ -6,4 +6,5 @@ find . -type f -name '*.go' \
 	| grep -v testutil \
 	| grep -v doc.go \
 	| grep -v plugin/step/install \
+	| grep -v '^\s*//' \
 	| xargs wc -l

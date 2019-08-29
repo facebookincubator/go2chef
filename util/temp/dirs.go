@@ -11,8 +11,8 @@ import (
 
 var tmps = make(map[string]string)
 
-// TempDir creates a temporary directory registered for cleanup
-func TempDir(dir, prefix string) (name string, err error) {
+// Dir creates a temporary directory registered for cleanup
+func Dir(dir, prefix string) (name string, err error) {
 	name, err = ioutil.TempDir(dir, prefix)
 	if err == nil {
 		_, fn, ln, _ := runtime.Caller(1)
@@ -21,8 +21,8 @@ func TempDir(dir, prefix string) (name string, err error) {
 	return
 }
 
-// TempFile creates a temporary file registered for cleanup
-func TempFile(dir string, prefix string) (f *os.File, err error) {
+// File creates a temporary file registered for cleanup
+func File(dir string, prefix string) (f *os.File, err error) {
 	f, err = ioutil.TempFile(dir, prefix)
 	if err == nil {
 		_, fn, ln, _ := runtime.Caller(1)
@@ -31,8 +31,10 @@ func TempFile(dir string, prefix string) (f *os.File, err error) {
 	return
 }
 
+// Cleanup performs the cleanup of paths unless preserve is true, in which
+// case it just prints the paths without deleting them (for debugging).
 func Cleanup(preserve bool) {
-	errs := make([]error, 0)
+	var errs []error
 	for tmp, caller := range tmps {
 		if preserve {
 			log.Printf("preserving temp path %s", tmp)

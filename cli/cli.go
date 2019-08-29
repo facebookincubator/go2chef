@@ -12,14 +12,17 @@ import (
 )
 
 var (
+	// DefaultConfigSource sets the go2chef CLI default configuration source type
 	DefaultConfigSource = "go2chef.config_source.local"
-	DefaultLogLevel     = go2chef.LogLevelInfo
-	logger              go2chef.Logger
+	// DefaultLogLevel sets the go2chef CLI default logging level
+	DefaultLogLevel = go2chef.LogLevelInfo
+	logger          go2chef.Logger
 )
 
 func init() {
 }
 
+// Go2ChefCLI is the CLI entry point for go2chef
 type Go2ChefCLI struct {
 	flags               *pflag.FlagSet
 	configSourceName    string
@@ -30,15 +33,17 @@ type Go2ChefCLI struct {
 	preserveTemp        bool
 }
 
+// Option defines the interface for CLI option functions
 type Option func(cli *Go2ChefCLI)
 
-// WithFlagSet is an option to set a custom FlagSet
+// WithFlagSet is an Option to set a custom FlagSet
 func WithFlagSet(set *pflag.FlagSet) Option {
 	return func(cli *Go2ChefCLI) {
 		cli.flags = set
 	}
 }
 
+// NewGo2ChefCLI configures a Go2ChefCLI instance
 func NewGo2ChefCLI(opts ...Option) *Go2ChefCLI {
 	cli := &Go2ChefCLI{
 		flags: pflag.NewFlagSet("go2chef", pflag.ExitOnError),
@@ -58,6 +63,7 @@ func NewGo2ChefCLI(opts ...Option) *Go2ChefCLI {
 	return cli
 }
 
+// Run kicks off the execution of go2chef
 func (g *Go2ChefCLI) Run(argv []string) int {
 	// Set early config flags and parse. As we build our
 	// own pflag.FlagSet plugins using pflag.*Var() functions

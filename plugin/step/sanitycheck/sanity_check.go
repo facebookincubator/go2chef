@@ -9,6 +9,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
+// TypeName is the name of this plugin
 const TypeName = "go2chef.sanitycheck"
 
 // SanityCheck implements basic sanity checks, and provides an API

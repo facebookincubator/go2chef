@@ -10,7 +10,7 @@ func TestEnsureSuperuser(t *testing.T) {
 	if err != nil {
 		t.Fatal("failed to call user.Current() for test setup")
 	}
-	UnixSuperuserUid = curUser.Uid
+	UnixSuperuserUID = curUser.Uid
 	UnixSuperuserUsername = curUser.Username
 
 	fix, err := EnsureSuperuser(nil)

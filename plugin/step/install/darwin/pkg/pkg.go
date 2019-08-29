@@ -19,8 +19,10 @@ import (
 	"github.com/facebookincubator/go2chef"
 )
 
+// TypeName is the name of this step plugin
 const TypeName = "go2chef.step.install.darwin.pkg"
 
+// Step implements Chef installation via macOS
 type Step struct {
 	// StepName defines the name of the step
 	StepName string `mapstructure:"name"`
@@ -44,24 +46,28 @@ func (s *Step) String() string {
 	return "<" + TypeName + ":" + s.StepName + ">"
 }
 
+// SetName sets the name of this step instance
 func (s *Step) SetName(str string) {
 	s.StepName = str
 }
 
+// Name gets the name of this step instance
 func (s *Step) Name() string {
 	return s.StepName
 }
 
+// Type returns the type of this step instance
 func (s *Step) Type() string {
 	return TypeName
 }
 
+// Download fetches resources required for this step's execution
 func (s *Step) Download() error {
 	if s.source == nil {
 		return nil
 	}
 
-	tmpdir, err := temp.TempDir("", "go2chef-install")
+	tmpdir, err := temp.Dir("", "go2chef-install")
 	if err != nil {
 		return err
 	}
@@ -74,6 +80,7 @@ func (s *Step) Download() error {
 	return nil
 }
 
+// Execute performs the installation
 func (s *Step) Execute() error {
 	// If this is a DMG, go down the rabbit hole. Mount it and
 	// then set downloadPath to its mount point.
@@ -120,6 +127,7 @@ func (s *Step) Execute() error {
 	return nil
 }
 
+// Loader provides an instantiation function for this step plugin
 func Loader(config map[string]interface{}) (go2chef.Step, error) {
 	step := &Step{
 		StepName:                "",
@@ -171,7 +179,7 @@ func (s *Step) findDMG() (string, error) {
 func (s *Step) mountDMG(dmg string) error {
 	ctx := context.Background()
 
-	tmpdir, err := temp.TempDir("", "")
+	tmpdir, err := temp.Dir("", "")
 	if err != nil {
 		return err
 	}
@@ -190,7 +198,7 @@ func (s *Step) mountDMG(dmg string) error {
 	dir, err := getDMGVolume(tmpdir)
 	if err != nil {
 		s.downloadPath = tmpdir
-		defer s.unmountDMG()
+		defer func() { _ = s.unmountDMG() }()
 		return err
 	}
 

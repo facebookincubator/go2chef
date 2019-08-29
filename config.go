@@ -45,6 +45,7 @@ type Config struct {
 	Steps   []Step
 }
 
+// Global is the global configuration store
 var Global = &GlobalConfig{}
 
 // GetConfig loads and resolves the configuration

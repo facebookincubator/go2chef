@@ -8,6 +8,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
+// TypeName is the name of this logger plugin
 const TypeName = "go2chef.logger.stdlib"
 
 // Logger represents a logger that just sends output to the
@@ -19,11 +20,17 @@ type Logger struct {
 	debug      int
 }
 
+// Config defines the structure of the configuration for this
+// logger. It's separated in this case since the level spec
+// in the configuration file is a string and the internal
+// representation is numeric.
 type Config struct {
 	Level     string
 	Debugging int
 }
 
+// NewFromLogger creates a new instance of the stdlib logger
+// from an existing log.Logger
 func NewFromLogger(l *log.Logger, level, debug int) *Logger {
 	return &Logger{
 		LoggerName: "go2chef",
@@ -48,23 +55,30 @@ func (l *Logger) Type() string {
 	return TypeName
 }
 
+// SetDebug sets the debugging level threshold
 func (l *Logger) SetDebug(dbg int) {
 	l.debug = dbg
 }
+
+// SetLevel sets the overall logging level threshold
 func (l *Logger) SetLevel(lvl int) {
 	l.level = lvl
 }
 
+// Errorf writes a message at ERROR level
 func (l *Logger) Errorf(fmt string, args ...interface{}) {
 	l.log.Printf("ERROR: "+fmt, args...)
 }
 
+// Infof writes a message at INFO level
 func (l *Logger) Infof(fmt string, args ...interface{}) {
 	if l.level >= go2chef.LogLevelInfo {
 		l.log.Printf("INFO: "+fmt, args...)
 	}
 }
 
+// Debugf writes a message at DEBUG level *if* the debug level
+// is at least as high as the level passed by the caller.
 func (l *Logger) Debugf(dbg int, fmt string, args ...interface{}) {
 	if l.level >= go2chef.LogLevelDebug && dbg >= l.debug {
 		l.log.Printf("DEBUG: "+fmt, args...)
