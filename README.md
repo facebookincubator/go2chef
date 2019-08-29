@@ -62,6 +62,14 @@ Create a configuration file. For example, to install Chef and then download and 
    $ ./go2chef --local-config config.json
    ```
 
+#### `scripts/remote.go`
+
+A remote execution script is provided in `scripts/remote.go`. Example usage:
+
+```
+$ make windows && go run scripts/remote.go --binary build/windows/amd64/go2chef.exe -B examples/bundles/chefctl -B examples/bundles/chefrepo -B examples/bundles/whoami_exec --target 10.0.10.187 -W -c examples/config_install_msi.json
+```
+
 ## Design
 
 `go2chef` has four basic building blocks, all of which are implemented using a plugin model:
