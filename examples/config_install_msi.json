@@ -38,9 +38,10 @@
     {
       "type": "go2chef.step.command",
       "name": "execute chefctl",
-      "command": ["C:/opscode/chef/embedded/bin/ruby", "C:/Windows/System32/chefctl.rb", "-iv"],
+      "command": ["cmd", "/c", "C:/opscode/chef/embedded/bin/ruby", "C:/Windows/System32/chefctl.rb", "-iv"],
       "env": {
-        "CHEF_LICENSE": "accept"
+        "CHEF_LICENSE": "accept",
+	"PATH": "C:\\Windows\\system32;C:\\Windows;C:\\Windows\\System32\\Wbem;C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\;C:\\Windows\\System32\\OpenSSH\\;C:\\Windows\\system32\\config\\systemprofile\\AppData\\Local\\Microsoft\\WindowsApps;C:\\Users\\root\\AppData\\Local\\Microsoft\\WindowsApps;"
       }
     }
   ]
