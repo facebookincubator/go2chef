@@ -2,16 +2,11 @@ package bundle
 
 import (
 	"context"
-	"log"
 	"os"
 	"os/exec"
-	"path/filepath"
-	"runtime"
 	"time"
 
 	"github.com/facebookincubator/go2chef/util/temp"
-
-	"github.com/facebookincubator/go2chef/util"
 
 	"github.com/facebookincubator/go2chef"
 	"github.com/mitchellh/mapstructure"
@@ -68,45 +63,21 @@ func (b *Bundle) Download() error {
 
 // Execute loads the bundle.json and executes the command specified therein
 func (b *Bundle) Execute() error {
-	bundleExec := "bundle.sh"
-	if runtime.GOOS == "windows" {
-		bundleExec = "bundle.ps1"
-	}
-
-	// try to execute platform-native scripts first:
-	// - bundle.sh
-	// - bundle.ps1
-	execPath := filepath.Join(b.downloadPath, bundleExec)
-	if util.PathExists(execPath) {
-		ctx, cancel := context.WithTimeout(context.Background(), time.Duration(b.TimeoutSeconds)*time.Second)
-		defer cancel()
-
-		var cmd *exec.Cmd
-		if runtime.GOOS == "windows" {
-			cmd = exec.CommandContext(
-				ctx, "powershell.exe", "-ExecutionPolicy", "Bypass", "-File", execPath,
-			)
-		} else {
-			cmd = exec.CommandContext(ctx, execPath)
-		}
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		cmd.Dir = b.downloadPath
-
-		if err := cmd.Run(); err != nil {
-			return err
-		}
-		return nil
-	}
-
-	// otherwise look for bundle.json to define the entry point
-	config, err := LoadBundleConfig(filepath.Join(b.downloadPath, b.ConfigName))
+	entryPoint, err := findEntrypoint(b.downloadPath)
 	if err != nil {
 		return err
 	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(b.TimeoutSeconds)*time.Second)
+	defer cancel()
 
-	if err := config.Execute(b.downloadPath); err != nil {
-		log.Printf("error during bundle execution")
+	var cmd *exec.Cmd
+
+	cmd = commandForPath(entryPoint, ctx)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Dir = b.downloadPath
+
+	if err := cmd.Run(); err != nil {
 		return err
 	}
 	return nil
