@@ -110,11 +110,10 @@ func (s *Source) DownloadToPath(dlPath string) (err error) {
 		outputFilename = dlPath
 	} else {
 		_, params, err := mime.ParseMediaType(resp.Header.Get("Content-Disposition"))
-		if err != nil {
-			return err
-		}
-		if fn, ok := params["filename"]; ok {
-			outputFilename = fn
+		if err == nil {
+			if fn, ok := params["filename"]; ok {
+				outputFilename = fn
+			}
 		}
 	}
 	outputPath := filepath.Join(dlPath, outputFilename)
