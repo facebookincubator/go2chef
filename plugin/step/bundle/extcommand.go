@@ -65,15 +65,3 @@ func commandForPath(path string, ctx context.Context) *exec.Cmd {
 		return nil
 	}
 }
-
-func WindowsPowershell(path string, ctx context.Context) *exec.Cmd {
-	if filepath.Ext(path) == ".ps1" {
-	}
-	return nil
-}
-
-func WindowsCmd(path string, ctx context.Context) *exec.Cmd {
-	if filepath.Ext(path) == ".bat" || filepath.Ext(path) == ".cmd" {
-	}
-	return nil
-}
