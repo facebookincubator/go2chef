@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"log"
 	"strconv"
 
 	"github.com/facebookincubator/go2chef/util/temp"
@@ -24,12 +23,11 @@ func init() {
 
 // Go2ChefCLI is the CLI entry point for go2chef
 type Go2ChefCLI struct {
-	flags               *pflag.FlagSet
-	configSourceName    string
-	logLevel            string
-	logDebugLevel       int
-	disableStdlibLogger bool
-	preserveTemp        bool
+	flags            *pflag.FlagSet
+	configSourceName string
+	logLevel         string
+	logDebugLevel    int
+	preserveTemp     bool
 }
 
 // Option defines the interface for CLI option functions
@@ -57,7 +55,6 @@ func NewGo2ChefCLI(opts ...Option) *Go2ChefCLI {
 	}
 	cli.flags.StringVarP(&cli.configSourceName, "config-source", "C", DefaultConfigSource, "name of the configuration source to use")
 	cli.flags.StringVarP(&cli.logLevel, "log-level", "l", logLevel, "log level")
-	cli.flags.BoolVar(&cli.disableStdlibLogger, "disable-stdlib-logger", false, "disable the stdlib logger")
 	cli.flags.BoolVar(&cli.preserveTemp, "preserve-temp", false, "preserve temporary directories from this run")
 	return cli
 }
@@ -79,17 +76,13 @@ func (g *Go2ChefCLI) Run(argv []string) int {
 		return 1
 	}
 
-	// Add stdlib early logger if not disabled explicitly. This
-	// ensures that by default you'll get *some* logging interactively.
-	var early go2chef.Logger
-	if !g.disableStdlibLogger {
-		early = stdlib.NewFromLogger(go2chef.EarlyLogger, logLevel, g.logDebugLevel)
-	}
+	// Add stdlib early logger
+	early := stdlib.NewFromLogger(go2chef.EarlyLogger, logLevel, g.logDebugLevel)
 
 	// Load actual configuration
 	cfg, err := go2chef.GetConfig(g.configSourceName, early)
 	if err != nil {
-		log.Printf("config error: %s", err)
+		early.Errorf("config error: %s", err)
 		return 1
 	}
 
