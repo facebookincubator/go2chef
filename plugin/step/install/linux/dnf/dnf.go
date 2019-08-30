@@ -91,6 +91,9 @@ func (s *Step) Download() error {
 	if s.source == nil {
 		return nil
 	}
+	if s.isInstalled() {
+		return nil
+	}
 
 	tmpdir, err := temp.Dir("", "go2chef-install")
 	if err != nil {
@@ -109,28 +112,15 @@ func (s *Step) Download() error {
 func (s *Step) Execute() error {
 	installPackage := s.PackageName
 
-	if s.source != nil {
-		rpm, err := s.findRPM()
-		if err != nil {
-			return err
-		}
-		installPackage = filepath.Join(s.downloadPath, rpm)
-	}
-
-	installed := false
-	if s.Version != "" {
-		if err := s.checkInstalled(); err != nil {
-			switch err.(type) {
-			case *exec.ExitError:
-				installed = false
-			case *go2chef.ErrChefAlreadyInstalled:
-				s.logger.Infof("%s", err)
-				installed = true
+	if !s.isInstalled() {
+		if s.source != nil {
+			rpm, err := s.findRPM()
+			if err != nil {
+				return err
 			}
+			installPackage = filepath.Join(s.downloadPath, rpm)
 		}
-	}
 
-	if !installed {
 		if s.installWithRPM {
 			return s.installChefRPM(installPackage)
 		}
@@ -197,6 +187,22 @@ func init() {
 
 func (s *Step) findRPM() (string, error) {
 	return util.MatchPath(s.downloadPath, s.packageRegex)
+}
+
+func (s *Step) isInstalled() bool {
+	installed := false
+	if s.Version != "" {
+		if err := s.checkInstalled(); err != nil {
+			switch err.(type) {
+			case *exec.ExitError:
+				installed = false
+			case *go2chef.ErrChefAlreadyInstalled:
+				s.logger.Infof("%s", err)
+				installed = true
+			}
+		}
+	}
+	return installed
 }
 
 func (s *Step) checkInstalled() error {

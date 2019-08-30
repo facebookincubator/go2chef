@@ -79,6 +79,7 @@ func (s *Source) DownloadToPath(dlPath string) (err error) {
 			return err
 		}
 	}
+	s.logger.Debugf(1, "%s: 1", s.Name())
 
 	req, err := http.NewRequest(s.Method, s.URL, nil)
 	if err != nil {
@@ -95,6 +96,15 @@ func (s *Source) DownloadToPath(dlPath string) (err error) {
 
 	if !s.checkStatusCode(resp) {
 		return fmt.Errorf("non-matching status code: %d", resp.StatusCode)
+	}
+
+	tmpfile, err := temp.File("", "go2chef-src-http-*")
+	defer func() { _ = tmpfile.Close() }()
+	if err != nil {
+		return err
+	}
+	if _, err = io.Copy(tmpfile, resp.Body); err != nil {
+		return err
 	}
 
 	/*
@@ -120,42 +130,28 @@ func (s *Source) DownloadToPath(dlPath string) (err error) {
 
 	if s.Archive {
 		/*
-		  ARCHIVE MODE
-
-		  If the request is for an archive (using `{"archive": true}` in config) then
+		  ARCHIVE MODE: If the request is for an archive (using `{"archive": true}` in config) then
 		  decompress that archive into the destination.
 		*/
-		s.logger.Debugf(1, "%s: archive mode enabled", s.Name())
-		tmpfile, err := temp.File("", "go2chef-src-http-*-"+outputFilename)
-		defer func() { _ = tmpfile.Close() }()
-		if err != nil {
+		_ = tmpfile.Close()
+		s.logger.Debugf(1, "%s: archive mode enabled, extracting %s to %s", s.Name(), tmpfile.Name(), dlPath)
+		extFilename := filepath.Join(filepath.Dir(tmpfile.Name()), outputFilename)
+		if err := os.Rename(tmpfile.Name(), extFilename); err != nil {
+			s.logger.Errorf("failed to relocate output")
 			return err
 		}
-		if _, err = io.Copy(tmpfile, resp.Body); err != nil {
-			return err
-		}
-		s.logger.Debugf(1, "%s: extracting %s to %s", s.Name(), tmpfile.Name(), dlPath)
 
-		if err := archiver.Unarchive(tmpfile.Name(), dlPath); err != nil {
+		if err := archiver.Unarchive(extFilename, dlPath); err != nil {
 			return err
 		}
 	} else {
 		/*
-		  FILE MODE
-
-		  If the request isn't for an archive (default), then just put it straight into
-		  the destination. Step implementations can handle the file discovery logic
-		  themselves.
+			FILE MODE: If the request isn't for an archive (default), then just close the temp file
+			and move to the output path.
 		*/
-		fh, err := os.OpenFile(outputPath, os.O_CREATE|os.O_RDWR|os.O_TRUNC, os.FileMode(0644))
-		if err != nil {
-			return err
-		}
-		defer func() { _ = fh.Close() }()
-
-		if _, err := io.Copy(fh, resp.Body); err != nil {
-			return err
-		}
+		s.logger.Debugf(1, "%s: direct download", s.Name())
+		_ = tmpfile.Close()
+		return os.Rename(tmpfile.Name(), outputPath)
 	}
 	return nil
 }
