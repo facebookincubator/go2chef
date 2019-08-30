@@ -3,6 +3,9 @@
 ## What is `go2chef`?
 `go2chef` is a Go tool for bootstrapping Chef installations in a flexible and self-contained way. With `go2chef`, our goal is to make bootstrapping any node in a Chef deployment as simple as "get `go2chef` onto a machine and run it"
 
+## Requirements
+go2chef has no runtime dependencies.
+
 ## Quickstart Example
 
 ### Building
@@ -27,7 +30,7 @@ PS> go build -o build/windows/amd64/go2chef.exe ./bin
 
 Create a configuration file. For example, to install Chef and then download and install a custom `chefctl.rb` bundle from a tarball on Fedora:
 
-```
+```json
 {
   "steps": [
     {
@@ -147,7 +150,7 @@ Source plugins implement a common API for resource retrieval for `go2chef`. This
 
 A `source` key inside a step configuration block defines how the remote resources for that step should be retrieved.
 
-## Code Layout
+### Code Layout
 
 ```
 bin/        # go2chef binary source code
@@ -160,29 +163,6 @@ plugin/     # plugins directory
   step/     # step plugins
 *.go        # go code for the base go2chef module
 ```
-
-## Building
-
-```
-$ make all      # build all binaries supported
-$ make linux    # build only linux binary
-$ make test     # run tests
-```
-
-## Improvements Planned
-
-* Basic templating in config (path substitution etc)
-  * Store a map of step name => step download dir?# go2chef
-
-go2chef is a tool to boostrap a system from first principles so that it's able
-to run Chef to be managed. It takes care of downloading and installing Chef in
-a generic and multi-platform way.
-
-## Usage
-TODO
-
-## Requirements
-go2chef has no runtime dependencies.
 
 ## Contribute
 See the CONTRIBUTING file for how to help out.
