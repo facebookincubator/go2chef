@@ -1,89 +1,84 @@
+/*
+Package plugconf implements a pluggable configuration store.
+
+The way it works: install a plugin
+*/
 package plugconf
 
 import (
 	"errors"
 	"fmt"
-	"github.com/mitchellh/mapstructure"
-	"reflect"
+	"runtime"
+	"strconv"
 )
 
 var (
-	TagName = "plugconf"
+	TagName            = "plugconf"
 	ErrOutputNotStruct = errors.New("output is not a struct")
 )
 
+type ErrAlreadyRegistered struct {
+	field string
+	reg   *registration
+}
+
+func NewErrAlreadyRegistered(field string, reg *registration) *ErrAlreadyRegistered {
+	return &ErrAlreadyRegistered{field: field, reg: reg}
+}
+
+func (e *ErrAlreadyRegistered) Error() string {
+	return fmt.Sprintf("field %s is already registered from %s", e.field, e.reg.who)
+}
+
+type Processor func(field string, configData interface{}) error
+
+type registration struct {
+	who  string
+	proc Processor
+}
+
+// PlugConf implements a pluggable configuration store
 type PlugConf struct {
-	tagName string
-	remaining map[string]interface{}
-	registry []interface{}
-	registeredFields map[string]string
+	tagName          string
+	registeredFields map[string]registration
 }
 
-func NewPlugConf(start map[string]interface{}) *PlugConf {
+// NewPlugConf creates a new PlugConf with a given starting map
+func NewPlugConf() *PlugConf {
 	return &PlugConf{
-		tagName: TagName,
-		remaining:start,
-		registry: nil,
-		registeredFields: make(map[string]string),
+		tagName:          TagName,
+		registeredFields: make(map[string]registration),
 	}
 }
 
-func (p *PlugConf) Register(output interface{}) error {
-	t := reflect.TypeOf(output)
-	if t.Kind() == reflect.Ptr {
-		t = t.Elem()
+// Register puts a new output config in the
+func (p *PlugConf) Register(field string, proc Processor) error {
+	if reg, ok := p.registeredFields[field]; ok {
+		return NewErrAlreadyRegistered(field, &reg)
 	}
-	if t.Kind() != reflect.Struct {
-		return ErrOutputNotStruct
-	}
-	type tagReg struct {
-		tag string
-		name string
-	}
-	var toReg []tagReg
-	for i := 0; i < t.NumField(); i++ {
-		f := t.Field(i)
-		tag := f.Tag.Get(p.tagName)
-		if tag != "" {
-			if ex, ok := p.registeredFields[tag]; ok {
-				return fmt.Errorf("field %s is already registered for type %s", tag, ex)
-			} else {
-				toReg = append(toReg, tagReg{tag:tag, name: t.Name()})
-			}
-		}
-	}
-	p.registry = append(p.registry, output)
-	for _, tr := range toReg{
-		p.registeredFields[tr.tag] = tr.name
-	}
+	_, fn, ln, _ := runtime.Caller(1)
+	p.registeredFields[field] = registration{who: fn + ":" + strconv.Itoa(ln), proc: proc}
 	return nil
 }
 
-func (p *PlugConf) Process() error {
-	for _, output := range p.registry {
-		if err := p.process(output); err != nil {
+// MustRegister is like Register but panics on failure
+func (p *PlugConf) MustRegister(field string, proc Processor) {
+	if err := p.Register(field, proc); err != nil {
+		panic("error registering plugconf field: " + err.Error())
+	}
+}
+
+// Process iterates through the registered configuration
+// outputs and emits configurations for them
+func (p *PlugConf) Process(config map[string]interface{}) error {
+	for field, reg := range p.registeredFields {
+		var toProc interface{}
+		if fieldVal, ok := config[field]; ok {
+			toProc = fieldVal
+		}
+		if err := reg.proc(field, toProc); err != nil {
 			return err
 		}
-	}
-	return nil
-}
-
-func (p *PlugConf) process(output interface{}) error {
-	var md mapstructure.Metadata
-	mcfg := &mapstructure.DecoderConfig{
-		Metadata:         &md,
-		Result:           output,
-		TagName:          TagName,
-	}
-	dec, err := mapstructure.NewDecoder(mcfg)
-	if err != nil {
-		return err
-	}
-	if err := dec.Decode(p.remaining); err != nil {
-		return err
-	}
-	for _, delKey := range md.Keys {
-		delete(p.remaining, delKey)
 	}
 	return nil
 }
