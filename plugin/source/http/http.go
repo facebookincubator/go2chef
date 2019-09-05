@@ -14,6 +14,8 @@ import (
 	"path"
 	"path/filepath"
 
+	"github.com/facebookincubator/go2chef/plugin/lib/certs"
+
 	"github.com/facebookincubator/go2chef/util/temp"
 
 	"github.com/facebookincubator/go2chef"
@@ -68,8 +70,16 @@ func (s *Source) DownloadToPath(dlPath string) (err error) {
 		s.logger.WriteEvent(go2chef.NewEvent(event, TypeName, s.URL))
 	}()
 
+	tlsConf, err := certs.TLS.GetTLSClientConf()
+	if err != nil {
+		return err
+	}
 	// Use the client from GlobalConfig so we can get any configured CAs
-	c := go2chef.Global.GetHTTPClientWithCAs()
+	c := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: tlsConf,
+		},
+	}
 
 	if ex, err := go2chef.PathExists(dlPath); err != nil {
 		return err

@@ -45,9 +45,6 @@ type Config struct {
 	Steps   []Step
 }
 
-// Global is the global configuration store
-var Global = &GlobalConfig{}
-
 // GetConfig loads and resolves the configuration
 func GetConfig(configSourceName string, earlyLogger Logger) (*Config, error) {
 	EarlyLogger.Printf("loading config from source %s", configSourceName)
@@ -64,12 +61,9 @@ func GetConfig(configSourceName string, earlyLogger Logger) (*Config, error) {
 
 	cfg := &Config{}
 
-	// pull global configuration
-	global, err := GetGlobalConfig(config)
-	if err != nil {
+	if err := LoadGlobalConfiguration(config); err != nil {
 		return nil, err
 	}
-	Global = global
 
 	loggers, err := GetLoggers(config)
 	if err != nil {
