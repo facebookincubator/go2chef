@@ -110,8 +110,6 @@ func (g *Go2ChefCLI) Run(argv []string) int {
 		eventFinishStep(i)
 	}
 
-	go2chef.Global.GetCertificateAuthorities()
-
 	go2chef.ShutdownGlobalLogger()
 	return 0
 }
