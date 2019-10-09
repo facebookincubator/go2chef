@@ -159,7 +159,7 @@ func (s *Source) DownloadToPath(dlPath string) (err error) {
 			FILE MODE: If the request isn't for an archive (default), then just close the temp file
 			and move to the output path.
 		*/
-		s.logger.Debugf(1, "%s: direct download", s.Name())
+		s.logger.Debugf(1, "%s: direct download to %s, rename to %s", s.Name(), tmpfile.Name(), outputPath)
 		_ = tmpfile.Close()
 		return os.Rename(tmpfile.Name(), outputPath)
 	}
