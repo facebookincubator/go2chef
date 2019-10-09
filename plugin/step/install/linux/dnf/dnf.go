@@ -116,6 +116,7 @@ func (s *Step) Execute() error {
 		if s.source != nil {
 			rpm, err := s.findRPM()
 			if err != nil {
+				s.logger.Errorf("step execution failed: could not find step RPM from %s", s.source.Name())
 				return err
 			}
 			installPackage = filepath.Join(s.downloadPath, rpm)

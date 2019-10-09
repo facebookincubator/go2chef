@@ -1,7 +1,9 @@
 package go2chef
 
 import (
+	"fmt"
 	"math"
+	"runtime"
 )
 
 // MultiLogger is a fan-out logger for use as the central
@@ -42,21 +44,21 @@ func (m *MultiLogger) Type() string {
 // Errorf logs a formatted message at ERROR level
 func (m *MultiLogger) Errorf(s string, v ...interface{}) {
 	for _, l := range m.loggers {
-		l.Errorf(s, v...)
+		l.Errorf(stack2()+s, v...)
 	}
 }
 
 // Infof logs a formatted message at INFO level
 func (m *MultiLogger) Infof(s string, v ...interface{}) {
 	for _, l := range m.loggers {
-		l.Infof(s, v...)
+		l.Infof(stack2()+s, v...)
 	}
 }
 
 // Debugf logs a formatted message at DEBUG level
 func (m *MultiLogger) Debugf(dbg int, s string, v ...interface{}) {
 	for _, l := range m.loggers {
-		l.Debugf(dbg, s, v...)
+		l.Debugf(dbg, stack2()+s, v...)
 	}
 }
 
@@ -82,6 +84,14 @@ func (m *MultiLogger) Shutdown() {
 	for _, l := range m.loggers {
 		l.Shutdown()
 	}
+}
+
+func stack2() string {
+	_, f, l, ok := runtime.Caller(2)
+	if ok {
+		return fmt.Sprintf("%s:%d::", f, l)
+	}
+	return "runtime-caller-err::"
 }
 
 var _ Logger = &MultiLogger{}
