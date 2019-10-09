@@ -187,6 +187,7 @@ func init() {
 }
 
 func (s *Step) findRPM() (string, error) {
+	s.logger.Debugf(0, "searching for RPM in %s matching %s", s.downloadPath, s.packageRegex)
 	return util.MatchPath(s.downloadPath, s.packageRegex)
 }
 
