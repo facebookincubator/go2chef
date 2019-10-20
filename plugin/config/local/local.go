@@ -18,7 +18,7 @@ type ConfigSource struct {
 
 // InitFlags sets the command-line flags for local configuration sources
 func (c *ConfigSource) InitFlags(set *pflag.FlagSet) {
-	set.StringVar(&c.Path, "local-config", "", "local configuration path")
+	set.StringVar(&c.Path, "local-config", "config.json", "local configuration path")
 }
 
 // ReadConfig loads the configuration file from disk
