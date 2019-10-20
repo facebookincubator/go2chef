@@ -2,10 +2,14 @@ package msi
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"io/ioutil"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/facebookincubator/go2chef/util/temp"
@@ -15,6 +19,8 @@ import (
 	"github.com/mitchellh/mapstructure"
 
 	"github.com/facebookincubator/go2chef"
+
+	"golang.org/x/sys/windows/registry"
 )
 
 // TypeName is the name of this plugin
@@ -32,6 +38,9 @@ type Step struct {
 	ProgramMatch string `mapstructure:"program_match"`
 
 	MSIEXECTimeoutSeconds int `mapstructure:"msiexec_timeout_seconds"`
+
+	Cleanup   bool `mapstructure:"cleanup"`
+	Uninstall bool `mapstructure:"uninstall"`
 
 	logger       go2chef.Logger
 	source       go2chef.Source
@@ -73,6 +82,25 @@ func (s *Step) Execute() error {
 	msi, err := s.findMSI()
 	if err != nil {
 		return err
+	}
+
+	if running, err := isMSIRunning(); running || err != nil {
+		if err != nil {
+			return err
+		}
+
+		return errors.New(`another msi is installing`)
+	}
+
+	if s.Uninstall {
+		if err = uninstallChef(s.MSIEXECTimeoutSeconds); err != nil {
+			s.logger.Debugf(1, "%s", err)
+			// Try to install anyway I guess...
+		}
+	}
+
+	if s.Cleanup {
+		cleanupChefDirectory()
 	}
 
 	instCtx, cancel := context.WithTimeout(context.Background(), time.Duration(s.MSIEXECTimeoutSeconds)*time.Second)
@@ -144,4 +172,152 @@ func (s *Step) findMSI() (string, error) {
 		return "", err
 	}
 	return util.MatchPath(s.downloadPath, re)
+}
+
+func isMSIRunning() (bool, error) {
+	cmd := exec.Command("sc.exe", "query", "msiserver")
+	out, err := cmd.Output()
+	if err != nil {
+		return false, err
+	}
+
+	re := regexp.MustCompile(`\s+STATE\s+: \d+\s+([a-zA-Z]+)`)
+	m := re.FindAllSubmatch(out, -1)
+	state := string(m[0][1])
+	if state != "STOPPED" {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+type chefInstallInfo struct {
+	Path          string
+	UninstallGUID string
+	Version       string
+	Installed     bool
+}
+
+const installedProducts = `SOFTWARE\Classes\Installer\Products`
+
+func testChefInstalled() (*chefInstallInfo, error) {
+	re := regexp.MustCompile(`Chef (Infra ){0,1}Client v([\d\.]+)\s*`)
+	k, err := registry.OpenKey(registry.LOCAL_MACHINE, installedProducts, registry.QUERY_VALUE|registry.READ)
+	if err != nil {
+		return &chefInstallInfo{Installed: false}, err
+	}
+	defer k.Close()
+
+	ks, err := k.Stat()
+	if err != nil {
+		return &chefInstallInfo{Installed: false}, err
+	}
+
+	kn, err := k.ReadSubKeyNames(int(ks.SubKeyCount))
+	if err != nil {
+		return &chefInstallInfo{Installed: false}, err
+	}
+
+	for _, s := range kn {
+		searchKey := strings.Join([]string{installedProducts, s}, `\`)
+		searchSubKey, err := registry.OpenKey(registry.LOCAL_MACHINE, searchKey, registry.QUERY_VALUE|registry.READ)
+		if err != nil {
+			continue
+		}
+		defer searchSubKey.Close()
+
+		pn, _, err := searchSubKey.GetStringValue("ProductName")
+		if err != nil {
+			continue
+		}
+
+		if re.MatchString(pn) {
+			var uninstallGUID string
+
+			pi, _, err := searchSubKey.GetStringValue("ProductIcon")
+			if err == nil {
+				for _, c := range strings.Split(pi, `\`) {
+					if strings.Contains(c, `{`) {
+						uninstallGUID = c
+						break
+					}
+				}
+			}
+
+			verMatch := re.FindAllStringSubmatch(pn, -1)[0][2]
+
+			return &chefInstallInfo{
+				Installed:     true,
+				Path:          searchKey,
+				UninstallGUID: uninstallGUID,
+				Version:       verMatch,
+			}, nil
+		}
+	}
+
+	return &chefInstallInfo{Installed: false}, nil
+}
+
+func cleanupChefDirectory() error {
+	chefInstallDir := `C:\opscode\chef`
+
+	if info, _ := os.Stat(chefInstallDir); info == nil {
+		return nil
+	}
+
+	var (
+		recycleBin  = `C:\$Recycle.Bin`
+		done        = make(chan struct{})
+		ctx, cancel = context.WithTimeout(context.Background(), time.Minute*10)
+	)
+
+	go func() {
+		if trash, err := ioutil.TempDir(recycleBin, "go2chef"); err == nil {
+			exec.CommandContext(ctx, "move", "/Y", chefInstallDir, trash)
+			done <- struct{}{}
+			return
+		}
+
+		cancel()
+	}()
+
+	select {
+	case <-done:
+		fmt.Println("finished a okay!")
+	case <-ctx.Done():
+		return errors.New("cancelled")
+	}
+
+	return nil
+}
+
+func uninstallChef(timeout int) error {
+	var (
+		chefInfo *chefInstallInfo
+		err      error
+	)
+
+	if chefInfo, err = testChefInstalled(); err != nil {
+		return err
+	}
+
+	done := make(chan error)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout))
+	defer cancel()
+
+	go func() {
+		cmd := exec.CommandContext(ctx, "msiexec", "/qn", "/x", chefInfo.UninstallGUID)
+		done <- cmd.Run()
+	}()
+
+	select {
+	case err := <-done:
+		if err != nil {
+			return err
+		}
+	case <-ctx.Done():
+		return errors.New(`uninstall timed out`)
+	}
+
+	return nil
 }
