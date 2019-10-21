@@ -39,8 +39,8 @@ type Step struct {
 
 	MSIEXECTimeoutSeconds int `mapstructure:"msiexec_timeout_seconds"`
 
-	Cleanup   bool `mapstructure:"cleanup"`
-	Uninstall bool `mapstructure:"uninstall"`
+	RenameFolder bool `mapstructure:"rename_folder"`
+	Uninstall    bool `mapstructure:"uninstall"`
 
 	logger       go2chef.Logger
 	source       go2chef.Source
@@ -78,13 +78,8 @@ func (s *Step) Download() error {
 }
 
 // Execute performs the installation
-func (s *Step) Execute() error {
-	msi, err := s.findMSI()
-	if err != nil {
-		return err
-	}
-
-	if running, err := isMSIRunning(); running || err != nil {
+func (s *Step) Execute() (err error) {
+	if running, err := s.isMSIRunning(); running || err != nil {
 		if err != nil {
 			return err
 		}
@@ -93,14 +88,26 @@ func (s *Step) Execute() error {
 	}
 
 	if s.Uninstall {
-		if err = uninstallChef(s.MSIEXECTimeoutSeconds); err != nil {
+		if err = s.uninstallChef(s.MSIEXECTimeoutSeconds); err != nil {
 			s.logger.Debugf(1, "%s", err)
-			// Try to install anyway I guess...
+			return err
 		}
 	}
 
-	if s.Cleanup {
-		cleanupChefDirectory()
+	if s.RenameFolder {
+		if err = s.renameFolder(s.MSIEXECTimeoutSeconds); err != nil {
+			s.logger.Debugf(1, "%s", err)
+			return err
+		}
+	}
+
+	return s.installChef()
+}
+
+func (s *Step) installChef() error {
+	msi, err := s.findMSI()
+	if err != nil {
+		return err
 	}
 
 	instCtx, cancel := context.WithTimeout(context.Background(), time.Duration(s.MSIEXECTimeoutSeconds)*time.Second)
@@ -174,10 +181,15 @@ func (s *Step) findMSI() (string, error) {
 	return util.MatchPath(s.downloadPath, re)
 }
 
-func isMSIRunning() (bool, error) {
+// A simple check to see if the msiserver has a lock, which prevents installation
+// of other MSIs.
+// It's possible for this service to run for a while after an msi has terminated,
+// but there is no point in trying when it won't even work  ¯\_(ツ)_/¯
+func (s *Step) isMSIRunning() (bool, error) {
 	cmd := exec.Command("sc.exe", "query", "msiserver")
 	out, err := cmd.Output()
 	if err != nil {
+		s.logger.Errorf("%s", err)
 		return false, err
 	}
 
@@ -185,12 +197,16 @@ func isMSIRunning() (bool, error) {
 	m := re.FindAllSubmatch(out, -1)
 	state := string(m[0][1])
 	if state != "STOPPED" {
+		s.logger.Debugf(2, "msiserver is not stopped")
 		return true, nil
 	}
 
+	s.logger.Debugf(2, "msiserver is stopped")
 	return false, nil
 }
 
+// The MSI of the installation is recorded in the registry. We can use this
+// information to check if the desired version of Chef is already installed.
 type chefInstallInfo struct {
 	Path          string
 	UninstallGUID string
@@ -198,29 +214,39 @@ type chefInstallInfo struct {
 	Installed     bool
 }
 
-const installedProducts = `SOFTWARE\Classes\Installer\Products`
+const (
+	installedProducts       = `SOFTWARE\Classes\Installer\Products`
+	registryReadPermissions = registry.QUERY_VALUE | registry.READ
+)
 
-func testChefInstalled() (*chefInstallInfo, error) {
+// Scans the registry for installed products. It will find a product name that
+// matches a regex which contains enough information about what is installed.
+// The resulting struct can be used to uninstall the old client, if desired, or
+// make a judgement call of if a new versions has to be installed.
+func (s *Step) testChefInstalled() (*chefInstallInfo, error) {
 	re := regexp.MustCompile(`Chef (Infra ){0,1}Client v([\d\.]+)\s*`)
-	k, err := registry.OpenKey(registry.LOCAL_MACHINE, installedProducts, registry.QUERY_VALUE|registry.READ)
+	k, err := registry.OpenKey(registry.LOCAL_MACHINE, installedProducts, registryReadPermissions)
 	if err != nil {
+		s.logger.Errorf("%s", err)
 		return &chefInstallInfo{Installed: false}, err
 	}
 	defer k.Close()
 
 	ks, err := k.Stat()
 	if err != nil {
+		s.logger.Errorf("%s", err)
 		return &chefInstallInfo{Installed: false}, err
 	}
 
 	kn, err := k.ReadSubKeyNames(int(ks.SubKeyCount))
 	if err != nil {
+		s.logger.Errorf("%s", err)
 		return &chefInstallInfo{Installed: false}, err
 	}
 
 	for _, s := range kn {
 		searchKey := strings.Join([]string{installedProducts, s}, `\`)
-		searchSubKey, err := registry.OpenKey(registry.LOCAL_MACHINE, searchKey, registry.QUERY_VALUE|registry.READ)
+		searchSubKey, err := registry.OpenKey(registry.LOCAL_MACHINE, searchKey, registryReadPermissions)
 		if err != nil {
 			continue
 		}
@@ -232,72 +258,83 @@ func testChefInstalled() (*chefInstallInfo, error) {
 		}
 
 		if re.MatchString(pn) {
-			var uninstallGUID string
+			result := &chefInstallInfo{
+				Installed: true,
+				Path:      searchKey,
+			}
 
+			// This contains a path on disk to the product icon.
+			// From here we can infer the application's GUID.
+			// Too bad this information doesn't appear to be stored directly in the
+			// registry =(
 			pi, _, err := searchSubKey.GetStringValue("ProductIcon")
 			if err == nil {
 				for _, c := range strings.Split(pi, `\`) {
 					if strings.Contains(c, `{`) {
-						uninstallGUID = c
+						result.UninstallGUID = c
 						break
 					}
 				}
 			}
 
-			verMatch := re.FindAllStringSubmatch(pn, -1)[0][2]
+			verMatch := re.FindAllStringSubmatch(pn, -1)
+			if len(verMatch) > 0 && len(verMatch[0]) > 2 {
+				result.Version = verMatch[0][2]
+			}
 
-			return &chefInstallInfo{
-				Installed:     true,
-				Path:          searchKey,
-				UninstallGUID: uninstallGUID,
-				Version:       verMatch,
-			}, nil
+			return result, nil
 		}
 	}
 
 	return &chefInstallInfo{Installed: false}, nil
 }
 
-func cleanupChefDirectory() error {
-	chefInstallDir := `C:\opscode\chef`
+/*
+	Sometimes there is a file within the Chef directory that has a lock on a file.
+	The installer will fail to remove this file. In this case when an installation
+	attempt is made it could fail to finish and then the new client won't be installed.
+
+	Congratulations!
+
+	Now your node is in an inconsistent state! If you're relying on
+	Chef to recover from this it is fairly challenging since the application won't run
+	and yet Windows will still think it's installed correctly.
+
+	Instead of relying on the MSI installation/upgrade to work correctly (it hasn't
+	since the early versions of Chef 12), move the old installation directory out
+	of the way. The installation will now be able to successfully complete since
+	there are no locked files to contend with!
+*/
+func (s *Step) renameFolder(timeout int) (err error) {
+	const (
+		chefInstallDir = `C:\opscode\chef`
+		recycleBin     = `C:\$Recycle.Bin`
+	)
+	var trash string
 
 	if info, _ := os.Stat(chefInstallDir); info == nil {
 		return nil
 	}
 
-	var (
-		recycleBin  = `C:\$Recycle.Bin`
-		done        = make(chan struct{})
-		ctx, cancel = context.WithTimeout(context.Background(), time.Minute*10)
-	)
+	if trash, err = ioutil.TempDir(recycleBin, "go2chef"); err != nil {
+		return fmt.Errorf("could not create temporary directory: %s", err)
+	}
 
-	go func() {
-		if trash, err := ioutil.TempDir(recycleBin, "go2chef"); err == nil {
-			exec.CommandContext(ctx, "move", "/Y", chefInstallDir, trash)
-			done <- struct{}{}
-			return
-		}
-
-		cancel()
-	}()
-
-	select {
-	case <-done:
-		fmt.Println("finished a okay!")
-	case <-ctx.Done():
-		return errors.New("cancelled")
+	if err := os.Rename(chefInstallDir, trash); err != nil {
+		return err
 	}
 
 	return nil
 }
 
-func uninstallChef(timeout int) error {
+// Use the information collected from the registry to uninstall the client.
+func (s *Step) uninstallChef(timeout int) error {
 	var (
 		chefInfo *chefInstallInfo
 		err      error
 	)
 
-	if chefInfo, err = testChefInstalled(); err != nil {
+	if chefInfo, err = s.testChefInstalled(); err != nil {
 		return err
 	}
 
