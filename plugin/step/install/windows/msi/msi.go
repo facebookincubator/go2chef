@@ -79,14 +79,6 @@ func (s *Step) Download() error {
 
 // Execute performs the installation
 func (s *Step) Execute() (err error) {
-	if running, err := s.isMSIRunning(); running || err != nil {
-		if err != nil {
-			return err
-		}
-
-		return errors.New(`another msi is installing`)
-	}
-
 	if s.Uninstall {
 		if err = s.uninstallChef(s.MSIEXECTimeoutSeconds); err != nil {
 			s.logger.Debugf(1, "%s", err)
@@ -179,30 +171,6 @@ func (s *Step) findMSI() (string, error) {
 		return "", err
 	}
 	return util.MatchPath(s.downloadPath, re)
-}
-
-// A simple check to see if the msiserver has a lock, which prevents installation
-// of other MSIs.
-// It's possible for this service to run for a while after an msi has terminated,
-// but there is no point in trying when it won't even work  ¯\_(ツ)_/¯
-func (s *Step) isMSIRunning() (bool, error) {
-	cmd := exec.Command("sc.exe", "query", "msiserver")
-	out, err := cmd.Output()
-	if err != nil {
-		s.logger.Errorf("%s", err)
-		return false, err
-	}
-
-	re := regexp.MustCompile(`\s+STATE\s+: \d+\s+([a-zA-Z]+)`)
-	m := re.FindAllSubmatch(out, -1)
-	state := string(m[0][1])
-	if state != "STOPPED" {
-		s.logger.Debugf(2, "msiserver is not stopped")
-		return true, nil
-	}
-
-	s.logger.Debugf(2, "msiserver is stopped")
-	return false, nil
 }
 
 // The MSI of the installation is recorded in the registry. We can use this
@@ -310,17 +278,19 @@ func (s *Step) renameFolder(timeout int) (err error) {
 		chefInstallDir = `C:\opscode\chef`
 		recycleBin     = `C:\$Recycle.Bin`
 	)
-	var trash string
 
 	if info, _ := os.Stat(chefInstallDir); info == nil {
 		return nil
 	}
 
+	var trash string
 	if trash, err = ioutil.TempDir(recycleBin, "go2chef"); err != nil {
 		return fmt.Errorf("could not create temporary directory: %s", err)
 	}
 
-	if err := os.Rename(chefInstallDir, trash); err != nil {
+	// I have no idea why os.Rename always throws access denied. This, however,
+	// works just fine.
+	if err := exec.Command("cmd", "/c", "move", "/Y", chefInstallDir, trash).Run(); err != nil {
 		return err
 	}
 
@@ -338,12 +308,17 @@ func (s *Step) uninstallChef(timeout int) error {
 		return err
 	}
 
+	if chefInfo.UninstallGUID == "" {
+		return nil
+	}
+
 	done := make(chan error)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout))
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*time.Duration(timeout))
 	defer cancel()
 
 	go func() {
 		cmd := exec.CommandContext(ctx, "msiexec", "/qn", "/x", chefInfo.UninstallGUID)
+		s.logger.Debugf(1, "uninstalling chef: %s", cmd.String())
 		done <- cmd.Run()
 	}()
 
