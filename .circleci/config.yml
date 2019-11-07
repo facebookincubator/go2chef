@@ -1,0 +1,62 @@
+version: 2.1
+
+orbs:
+  win: circleci/windows@1.0.0
+
+jobs:
+  build-linux:
+    docker:
+    - image: circleci/golang:1.12.13
+    steps:
+      - checkout
+      - run: make linux
+
+  test-linux:
+    docker:
+    - image: circleci/golang:1.12.13
+      environment:
+        TEST_RESULTS: /tmp/test-results
+        ARTIFACTS: /tmp/artifacts
+    steps:
+      - checkout
+      - run: mkdir -p $TEST_RESULTS $ARTIFACTS
+      - run: go get github.com/lib/pq github.com/mattes/migrate github.com/jstemmer/go-junit-report
+      - run:
+          name: Run Unit Tests 
+          command: |
+            trap "go-junit-report <${TEST_RESULTS}/go-test.out > ${TEST_RESULTS}/go-test-report.xml" EXIT
+            make test | tee ${TEST_RESULTS}/go-test.out
+      - store_test_results:
+          path: /tmp/test-results
+
+  test-windows:
+    executor:
+      name: win/vs2019
+      shell: cmd.exe
+    steps:
+      - checkout
+      - run: 
+          name: Run Unit Tests
+          command: go test ./...
+
+  build-windows:
+    executor:
+      name: win/vs2019
+      shell: bash.exe
+    steps:
+      - checkout
+      - run: 
+          name: Build go2chef
+          environment:
+            GOOS: windows
+            GOARCH: amd64
+          command: ./scripts/build.sh
+
+workflows:
+  version: 2.1
+  workflow:
+    jobs:
+      - test-linux
+      - test-windows
+      - build-linux
+      - build-windows
