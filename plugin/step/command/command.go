@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 	"time"
 
 	"github.com/facebookincubator/go2chef"
@@ -19,7 +20,8 @@ type Step struct {
 	SName          string
 	Command        []string `mapstructure:"command"`
 	Env            map[string]string
-	TimeoutSeconds int `mapstructure:"timeout_seconds"`
+	TimeoutSeconds int      `mapstructure:"timeout_seconds"`
+	PassthroughEnv []string `mapstructure:"passthrough_env"`
 	logger         go2chef.Logger
 }
 
@@ -61,6 +63,13 @@ func (s *Step) Execute() error {
 	cmd.Stderr = os.Stderr
 
 	env := make([]string, 0, len(s.Env))
+	for _, ev := range s.PassthroughEnv {
+		for _, eval := range os.Environ() {
+			if strings.HasPrefix(eval, ev) {
+				env = append(env, eval)
+			}
+		}
+	}
 	for k, v := range s.Env {
 		env = append(env, k+"="+v)
 	}
