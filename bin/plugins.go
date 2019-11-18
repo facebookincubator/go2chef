@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "github.com/facebookincubator/go2chef/plugin/config/http"
 	_ "github.com/facebookincubator/go2chef/plugin/config/local"
 	_ "github.com/facebookincubator/go2chef/plugin/logger/stdlib"
 	_ "github.com/facebookincubator/go2chef/plugin/source/http"
