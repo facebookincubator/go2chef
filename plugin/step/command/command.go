@@ -52,8 +52,12 @@ func (s *Step) Download() error {
 
 // Execute runs the actual command.
 func (s *Step) Execute() error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(s.TimeoutSeconds)*time.Second)
-	defer cancel()
+	ctx := context.Background()
+	if s.TimeoutSeconds > 0 {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, time.Duration(s.TimeoutSeconds)*time.Second)
+		defer cancel()
+	}
 
 	if len(s.Command) < 1 {
 		return fmt.Errorf("empty command specification for %s", TypeName)
@@ -82,7 +86,7 @@ func (s *Step) Execute() error {
 func Loader(config map[string]interface{}) (go2chef.Step, error) {
 	c := &Step{
 		logger:         go2chef.GetGlobalLogger(),
-		TimeoutSeconds: 300,
+		TimeoutSeconds: 0,
 		Command:        make([]string, 0),
 		Env:            make(map[string]string),
 	}
