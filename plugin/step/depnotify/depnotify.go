@@ -12,9 +12,9 @@ const TypeName = "go2chef.step.depnotify"
 
 // Step implements a depnotify execution step plugin
 type Step struct {
-	SName          string
-	Status         string
-	logger         go2chef.Logger
+	SName  string
+	Status string
+	logger go2chef.Logger
 }
 
 func (s *Step) String() string {
@@ -54,14 +54,13 @@ func (s *Step) Execute() error {
 	if _, err := f.WriteString(message); err != nil {
 		return err
 	}
-  return nil
+	return nil
 }
-
 
 // Loader provides an instantiation function for this step plugin
 func Loader(config map[string]interface{}) (go2chef.Step, error) {
 	c := &Step{
-		logger:         go2chef.GetGlobalLogger(),
+		logger: go2chef.GetGlobalLogger(),
 	}
 	if err := mapstructure.Decode(config, c); err != nil {
 		return nil, err
