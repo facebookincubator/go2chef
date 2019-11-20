@@ -13,7 +13,8 @@ const TypeName = "go2chef.step.depnotify"
 // Step implements a depnotify execution step plugin
 type Step struct {
 	SName  string
-	Status string
+	Status bool
+	Message string
 	logger go2chef.Logger
 }
 
@@ -44,7 +45,11 @@ func (s *Step) Download() error {
 
 // Execute appends the status to the depnotify log file.
 func (s *Step) Execute() error {
-	message := "Status: " + s.Status + "\n"
+	prefix :=  "Command: "
+	if s.Status {
+		prefix = "Status: "
+	}
+	message := prefix + s.Message + "\n"
 	f, err := os.OpenFile("/private/var/tmp/depnotify.log",
 		os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
