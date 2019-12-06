@@ -58,6 +58,17 @@ func commandForPath(path string, ctx context.Context) *exec.Cmd {
 	case ".rb":
 		return exec.CommandContext(ctx, chefRuby(), path)
 	case ".sh":
+        fi, err := os.Lstat(path)
+        if err != nil {
+            return nil
+        }
+        mode := fi.Mode().Perm()
+        
+        // If the script is executable, execute it directly
+        if mode & 0111 == 0111 {
+            return exec.CommandContext(ctx, path)
+        }
+
 		return exec.CommandContext(ctx, "sh", path)
 	case ".bash":
 		return exec.CommandContext(ctx, "bash", path)
