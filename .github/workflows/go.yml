@@ -1,9 +1,12 @@
 name: Go2Chef
 on: [pull_request]
 jobs:
-  build-linux:
-    name: Build
-    runs-on: ubuntu-latest
+  build:
+    name: Test + Build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
     - name: Set up Go 1.12
       uses: actions/setup-go@v1
@@ -12,14 +15,23 @@ jobs:
       id: go
     - name: Check out code into the Go module directory
       uses: actions/checkout@v1
-    - name: Get dependencies
-      run: |
-        go get -v -t -d ./...
-        if [ -f Gopkg.toml ]; then
-            curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-            dep ensure
-        fi
-    - name: Test
+    - name: Test on Windows
+      if: runner.os == 'windows'
+      run: go test ./...
+    - name: Test on POSIX
+      if: runner.os != 'windows'
       run: make test
-    - name: Build
+    - name: Build on Windows
+      if: runner.os == 'windows'
+      run: ./scripts/build.sh
+      env:
+        GOOS: windows
+        GOARCH: amd64
+      shell: bash
+    - name: Build on OSX
+      if: runner.os == 'macos'
+      run: make darwin
+    - name: Build on Linux
+      if: runner.os == 'linux'
       run: make linux
+
