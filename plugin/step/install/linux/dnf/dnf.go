@@ -15,6 +15,10 @@ Example config for a Chef install
 */
 package dnf
 
+/*
+	Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
+*/
+
 import (
 	"bytes"
 	"context"

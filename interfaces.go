@@ -1,5 +1,9 @@
 package go2chef
 
+/*
+	Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
+*/
+
 import "fmt"
 
 // Component defines the interface for go2chef components (plugins)

@@ -8,6 +8,10 @@
 
 package go2chef
 
+/*
+	Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
+*/
+
 import (
 	"github.com/facebookincubator/go2chef/util/plugconf"
 	"github.com/mitchellh/mapstructure"
