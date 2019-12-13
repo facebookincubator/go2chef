@@ -5,6 +5,10 @@ The way it works: install a plugin
 */
 package plugconf
 
+/*
+	Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
+*/
+
 import (
 	"errors"
 	"fmt"

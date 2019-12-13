@@ -1,5 +1,9 @@
 package certs
 
+/*
+	Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
+*/
+
 import "testing"
 
 var sampleCert = `-----BEGIN CERTIFICATE-----
@@ -63,7 +67,7 @@ func TestLoadTLSConfigurationFromMap(t *testing.T) {
 	input := map[string]interface{}{
 		"trusted_ca_certs": []string{sampleCert},
 		"client_certs": []map[string]string{
-			map[string]string{
+			{
 				"certificate": sampleCert,
 				"key":         sampleKey,
 			}},

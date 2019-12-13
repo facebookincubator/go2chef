@@ -1,5 +1,9 @@
 package embed
 
+/*
+	Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
+*/
+
 import "testing"
 
 func TestConfigSource(t *testing.T) {

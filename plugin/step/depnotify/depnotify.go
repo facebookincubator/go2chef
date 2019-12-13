@@ -1,5 +1,9 @@
 package depnotify
 
+/*
+	Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
+*/
+
 import (
 	"os"
 
@@ -12,10 +16,10 @@ const TypeName = "go2chef.step.depnotify"
 
 // Step implements a depnotify execution step plugin
 type Step struct {
-	SName  string
-	Status bool
+	SName   string
+	Status  bool
 	Message string
-	logger go2chef.Logger
+	logger  go2chef.Logger
 }
 
 func (s *Step) String() string {
@@ -45,7 +49,7 @@ func (s *Step) Download() error {
 
 // Execute appends the status to the depnotify log file.
 func (s *Step) Execute() error {
-	prefix :=  "Command: "
+	prefix := "Command: "
 	if s.Status {
 		prefix = "Status: "
 	}

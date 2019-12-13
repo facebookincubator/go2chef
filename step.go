@@ -1,5 +1,9 @@
 package go2chef
 
+/*
+	Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
+*/
+
 // Step defines the interface for go2chef execution steps
 type Step interface {
 	Component

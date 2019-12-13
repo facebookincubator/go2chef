@@ -1,5 +1,9 @@
 package go2chef
 
+/*
+	Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
+*/
+
 import (
 	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/pflag"

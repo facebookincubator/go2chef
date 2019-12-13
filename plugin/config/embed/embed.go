@@ -4,6 +4,10 @@ at build time.
 */
 package embed
 
+/*
+	Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
+*/
+
 import (
 	"github.com/facebookincubator/go2chef"
 	"github.com/spf13/pflag"

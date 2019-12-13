@@ -1,5 +1,9 @@
 package bundle
 
+/*
+	Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
+*/
+
 import (
 	"context"
 	"os"
@@ -24,7 +28,7 @@ var unixLoadOrder = []string{
 	"bundle.sh",
 }
 var loadOrder = map[string][]string{
-	"windows": []string{
+	"windows": {
 		"bundle.rb",
 		"bundle.ps1",
 		"bundle.bat",
@@ -58,16 +62,16 @@ func commandForPath(path string, ctx context.Context) *exec.Cmd {
 	case ".rb":
 		return exec.CommandContext(ctx, chefRuby(), path)
 	case ".sh":
-        fi, err := os.Lstat(path)
-        if err != nil {
-            return nil
-        }
-        mode := fi.Mode().Perm()
-        
-        // If the script is executable, execute it directly
-        if mode & 0111 == 0111 {
-            return exec.CommandContext(ctx, path)
-        }
+		fi, err := os.Lstat(path)
+		if err != nil {
+			return nil
+		}
+		mode := fi.Mode().Perm()
+
+		// If the script is executable, execute it directly
+		if mode&0111 == 0111 {
+			return exec.CommandContext(ctx, path)
+		}
 
 		return exec.CommandContext(ctx, "sh", path)
 	case ".bash":

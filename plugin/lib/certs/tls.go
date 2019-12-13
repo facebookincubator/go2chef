@@ -1,5 +1,9 @@
 package certs
 
+/*
+	Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
+*/
+
 import (
 	"crypto/tls"
 	"crypto/x509"

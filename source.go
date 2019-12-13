@@ -1,5 +1,9 @@
 package go2chef
 
+/*
+	Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
+*/
+
 // Source defines the interface for source download components
 type Source interface {
 	Component
