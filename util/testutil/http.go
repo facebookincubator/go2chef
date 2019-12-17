@@ -5,11 +5,12 @@ package testutil
 */
 
 import (
+	"archive/zip"
+	"bytes"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
-	"os/exec"
-	"path"
 	"path/filepath"
 )
 
@@ -19,22 +20,46 @@ type ZipDirHandler struct {
 }
 
 func (z *ZipDirHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	archiveName := path.Base(req.URL.Path) + ".zip"
-	cmd := exec.Command("zip", "-r", "-", ".")
-	cmd.Dir = filepath.Join(z.Root, req.URL.Path)
-	cmd.Stdout = w
-	cmd.Stderr = os.Stderr
-	if err := cmd.Start(); err != nil {
-		log.Printf("error starting zip: %s", err)
+	var (
+		buf         bytes.Buffer
+		path        = filepath.Join(z.Root, req.URL.Path)
+		archiveName = func() string {
+			_, leaf := filepath.Split(z.Root)
+			return leaf + ".zip"
+		}()
+		zipArchive = zip.NewWriter(&buf)
+	)
+
+	filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
+		if info.IsDir() {
+			return nil
+		}
+
+		f, err := zipArchive.Create(info.Name())
+		if err != nil {
+			return err
+		}
+
+		b, err := ioutil.ReadFile(path)
+		if err != nil {
+			return err
+		}
+
+		if _, err := f.Write(b); err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err := zipArchive.Close(); err != nil {
+		log.Printf("error during zip creation: %s", err)
 		w.WriteHeader(500)
 		return
 	}
-	w.Header().Set("Content-Disposition", "attachment; filename="+archiveName+".zip")
-	w.Header().Set("Content-Type", "application/zip")
 
-	if err := cmd.Wait(); err != nil {
-		log.Printf("error zipping files: %s", err)
-		return
-	}
-	log.Printf("zipped request %s", req.URL.Path)
+	w.Header().Set("Content-Disposition", "attachment; filename="+archiveName)
+	w.Header().Set("Content-Type", "application/zip")
+	w.Write(buf.Bytes())
+	log.Printf("zipped folder %s for endpoint %s", path, req.URL.Path)
 }
