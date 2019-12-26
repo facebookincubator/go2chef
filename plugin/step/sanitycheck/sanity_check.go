@@ -14,7 +14,7 @@ import (
 )
 
 // TypeName is the name of this plugin
-const TypeName = "go2chef.winsanitycheck"
+const TypeName = "go2chef.sanitycheck"
 
 // SanityCheck implements basic sanity checks, and provides an API
 // for additional sanity-checks to be built as plugins.
