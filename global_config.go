@@ -1,11 +1,3 @@
-/*
-  GLOBAL CONFIGURATION
-
-  This file implements go2chef's global configuration subsystem. This is not implemented
-  with a plugin model as plugins which need functionality not yet provided here can still
-  implement it within their own plugin config.
-*/
-
 package go2chef
 
 /*
