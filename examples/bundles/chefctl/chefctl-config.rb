@@ -1,3 +1,7 @@
+#
+# Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
+#
+
 # This config file is located at /etc/chefctl-config.rb
 # You can change this location by passing `-C/--config` to `chefctl`
 # Default options and descriptions are in comments below.

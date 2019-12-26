@@ -1,3 +1,6 @@
+#
+# Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
+#
 require 'tempfile'
 require 'json'
 require 'chef/mixin/deep_merge'

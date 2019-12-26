@@ -1,4 +1,7 @@
 #!/bin/bash
+#
+# Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
+#
 set -eux
 install -m 755 -d /etc/chef
 install -m 755 -o root chefctl.rb /usr/local/bin/chefctl
