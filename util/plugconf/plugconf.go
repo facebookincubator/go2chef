@@ -1,8 +1,3 @@
-/*
-Package plugconf implements a pluggable configuration store.
-
-The way it works: install a plugin
-*/
 package plugconf
 
 /*

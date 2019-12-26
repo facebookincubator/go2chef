@@ -1,7 +1,4 @@
-/*
-Package embed implements a configuration source that can be fully compiled-in
-at build time.
-*/
+// Package embed is a configuration source that can be fully compiled-in
 package embed
 
 /*

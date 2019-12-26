@@ -1,4 +1,5 @@
 #!/bin/bash
+# Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 dirs=( $(find . -type f -name '*.go' | xargs -n1 dirname | sort | uniq) )
 
 for d in "${dirs[@]}"; do

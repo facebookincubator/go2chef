@@ -1,8 +1,3 @@
-/*
-	Package http implements the built-in HTTP download source for `go2chef`. It
-	can download either single files or any archive format supported by github.com/mholt/archiver.
-*/
-
 package http
 
 /*

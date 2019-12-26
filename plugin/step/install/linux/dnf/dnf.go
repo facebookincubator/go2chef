@@ -1,18 +1,3 @@
-/*
-Package dnf implements a step plugin for installation of Chef on RPM-based systems.
-It supports DNF, Yum, and direct RPM installation.
-
-If you provide a `source` config block, this plugin will download it and search for
-an RPM based on `package_name` (and, if specified, `version`).
-
-Example config for a Chef install
-
-	{
-		"type": "go2chef.step.install.linux.dnf",
-		"name": "install chef",
-		"package_name": "chef"
-	}
-*/
 package dnf
 
 /*
@@ -50,7 +35,20 @@ var (
 	DefaultPackageName = "chef"
 )
 
-// Step implements Chef installation via RHEL/Fedora DNF/YUM/RPM
+/*
+Step implements Chef installation via RHEL/Fedora DNF/YUM/RPM
+
+If you provide a `source` config block, this plugin will download it and search for
+an RPM based on `package_name` (and, if specified, `version`).
+
+Example config for a Chef install
+
+	{
+		"type": "go2chef.step.install.linux.dnf",
+		"name": "install chef",
+		"package_name": "chef"
+	}
+*/
 type Step struct {
 	StepName    string `mapstructure:"name"`
 	DNFBinary   string `mapstructure:"dnf_binary"`
