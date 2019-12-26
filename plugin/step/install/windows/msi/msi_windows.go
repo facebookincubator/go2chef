@@ -323,8 +323,9 @@ func (s *Step) uninstallChef(timeout int) error {
 	defer cancel()
 
 	go func() {
-		cmd := exec.CommandContext(ctx, "msiexec", "/qn", "/x", chefInfo.UninstallGUID)
-		s.logger.Debugf(1, "uninstalling chef: %s", cmd.String())
+		args := []string{"/qn", "/x", chefInfo.UninstallGUID}
+		cmd := exec.CommandContext(ctx, "msiexec", args...)
+		s.logger.Debugf(1, "uninstalling chef: msiexec %#v", args)
 		done <- cmd.Run()
 	}()
 
