@@ -1,3 +1,6 @@
+#
+# Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
+#
 chef_repo_root = ENV.include?('CHEF_REPO') ? ENV['CHEF_REPO'] : '/etc/chef/repo'
 
 STDERR.puts("Chef repo: #{chef_repo_root}")
