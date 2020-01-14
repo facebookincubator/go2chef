@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/facebookincubator/go2chef"
+	"github.com/facebookincubator/go2chef/util/temp"
 	"github.com/mitchellh/mapstructure"
 )
 
@@ -26,7 +27,10 @@ type Step struct {
 	Env            map[string]string
 	TimeoutSeconds int      `mapstructure:"timeout_seconds"`
 	PassthroughEnv []string `mapstructure:"passthrough_env"`
-	logger         go2chef.Logger
+
+	source       go2chef.Source
+	logger       go2chef.Logger
+	downloadPath string
 }
 
 func (s *Step) String() string {
@@ -51,6 +55,20 @@ func (s *Step) Type() string {
 // Download does nothing for this step since there's no
 // downloading to be done when running any ol' command.
 func (s *Step) Download() error {
+	if s.source == nil {
+		return nil
+	}
+	s.logger.Debugf(1, "%s: downloading source", s.Name())
+
+	tmpdir, err := temp.Dir("", "go2chef-bundle")
+	if err != nil {
+		return err
+	}
+	if err := s.source.DownloadToPath(tmpdir); err != nil {
+		return err
+	}
+	s.downloadPath = tmpdir
+	s.logger.Debugf(1, "%s: downloaded source to %s", s.Name(), s.downloadPath)
 	return nil
 }
 
@@ -69,6 +87,7 @@ func (s *Step) Execute() error {
 	cmd := exec.CommandContext(ctx, s.Command[0], s.Command[1:]...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
+	cmd.Dir = s.downloadPath
 
 	env := make([]string, 0, len(s.Env))
 	for _, ev := range s.PassthroughEnv {
@@ -88,11 +107,17 @@ func (s *Step) Execute() error {
 
 // Loader provides an instantiation function for this step plugin
 func Loader(config map[string]interface{}) (go2chef.Step, error) {
+	source, err := go2chef.GetSourceFromStepConfig(config)
+	if err != nil {
+		return nil, err
+	}
 	c := &Step{
-		logger:         go2chef.GetGlobalLogger(),
+		logger: go2chef.GetGlobalLogger(),
+
 		TimeoutSeconds: 0,
 		Command:        make([]string, 0),
 		Env:            make(map[string]string),
+		source:         source,
 	}
 	if err := mapstructure.Decode(config, c); err != nil {
 		return nil, err

@@ -1,0 +1,20 @@
+{
+  "steps": [
+    {
+      "type": "go2chef.step.command",
+      "command": ["ls"],
+      "source": {
+        "type": "go2chef.source.s3",
+        "name": "s3download",
+        "region": "your-region-here",
+        "bucket": "your-bucket-here",
+        "key": "your-key-here",
+        "credentials": {
+          "access_key_id": "your-access-key-id-here",
+          "secret_access_key": "your-secret-access-key-here"
+        },
+        "archive": false
+      }
+    }
+  ]
+}
