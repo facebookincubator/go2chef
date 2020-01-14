@@ -9,12 +9,13 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/aws/aws-sdk-go/aws/credentials"
+
 	"github.com/aws/aws-sdk-go/service/s3"
 
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/facebookincubator/go2chef"
 	"github.com/mholt/archiver"
@@ -38,6 +39,7 @@ type Source struct {
 	Credentials struct {
 		AccessKeyID     string `mapstructure:"access_key_id"`
 		SecretAccessKey string `mapstructure:"secret_access_key"`
+		Token           string `mapstructure:"token"`
 	}
 	Archive bool `mapstructure:"archive"`
 }
@@ -79,9 +81,12 @@ func (s *Source) DownloadToPath(dlPath string) error {
 		- if !archive, rename into output path
 		- else decompress archive to output path
 	*/
-	cfg := aws.NewConfig().WithCredentials(
-		credentials.NewStaticCredentials(s.Credentials.AccessKeyID, s.Credentials.SecretAccessKey, ""),
-	).WithRegion(s.Region)
+	cfg := aws.NewConfig().WithRegion(s.Region)
+	if s.Credentials.AccessKeyID != "" && s.Credentials.SecretAccessKey != "" {
+		cfg = cfg.WithCredentials(
+			credentials.NewStaticCredentials(s.Credentials.AccessKeyID, s.Credentials.SecretAccessKey, ""),
+		)
+	}
 	sess, err := session.NewSession(cfg)
 	if err != nil {
 		s.logger.Debugf(0, "failed to create AWS session: %s", err)
