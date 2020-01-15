@@ -1,0 +1,13 @@
+{
+  "steps": [
+    {
+      "type": "go2chef.step.install.linux.apt",
+      "name": "install chef",
+      "version": "15.2.20-1",
+      "source": {
+        "type": "go2chef.source.http",
+        "url": "https://packages.chef.io/files/stable/chef/15.2.20/ubuntu/16.04/chef_15.2.20-1_amd64.deb"
+      }
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+{
+  "shell": "exec",
+  "command": ["/usr/bin/whoami"]
+}

@@ -1,0 +1,48 @@
+{
+  "steps": [
+    {
+      "type": "go2chef.step.bundle",
+      "name": "whoami exec",
+      "source": {
+        "type": "go2chef.source.local",
+        "path": "./whoami_exec.tar.gz",
+        "archive": true
+      }
+    },
+    {
+      "type": "go2chef.step.install.windows.msi",
+      "name": "install chef",
+      "source": {
+        "type": "go2chef.source.http",
+        "url": "https://packages.chef.io/files/stable/chef/15.2.20/windows/2019/chef-client-15.2.20-1-x64.msi"
+      }
+    },
+    {
+      "type": "go2chef.step.bundle",
+      "name": "install chefctl",
+      "source": {
+        "type": "go2chef.source.local",
+        "path": "./chefctl.tar.gz",
+        "archive": true
+      }
+    },
+    {
+      "type": "go2chef.step.bundle",
+      "name": "install chef repo",
+      "source": {
+        "type": "go2chef.source.local",
+        "path": "./chefrepo.tar.gz",
+        "archive": true
+      }
+    },
+    {
+      "type": "go2chef.step.command",
+      "name": "execute chefctl",
+      "command": ["cmd", "/c", "C:/opscode/chef/embedded/bin/ruby", "C:/Windows/System32/chefctl.rb", "-iv"],
+      "env": {
+        "CHEF_LICENSE": "accept",
+	"PATH": "C:\\Windows\\system32;C:\\Windows;C:\\Windows\\System32\\Wbem;C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\;C:\\Windows\\System32\\OpenSSH\\;C:\\Windows\\system32\\config\\systemprofile\\AppData\\Local\\Microsoft\\WindowsApps;C:\\Users\\root\\AppData\\Local\\Microsoft\\WindowsApps;"
+      }
+    }
+  ]
+}

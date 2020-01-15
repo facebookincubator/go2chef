@@ -1,0 +1,13 @@
+{
+  "steps": [
+    {
+      "type": "go2chef.step.install.linux.rpm",
+      "name": "install chef",
+      "version": "15.2.20-1.el7.x86_64",
+      "source": {
+        "type": "go2chef.source.http",
+        "url": "https://packages.chef.io/files/stable/chef/15.2.20/el/8/chef-15.2.20-1.el7.x86_64.rpm"
+      }
+    }
+  ]
+}

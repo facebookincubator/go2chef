@@ -1,0 +1,12 @@
+{
+  "steps": [
+    {
+      "type": "go2chef.step.bundle",
+      "name": "example bundle whoami_exec",
+      "source": {
+        "type": "go2chef.source.local",
+        "path": "examples/bundles/whoami_exec"
+      }
+    }
+  ]
+}

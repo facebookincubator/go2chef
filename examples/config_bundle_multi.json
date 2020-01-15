@@ -1,0 +1,21 @@
+{
+  "steps": [
+    {
+      "type": "go2chef.step.bundle",
+      "name": "example bundle multi",
+      "source": {
+        "type": "go2chef.source.multi",
+        "sources": [
+          {
+            "type": "go2chef.source.local",
+            "path": "examples/bundles/multi/contents"
+          },
+          {
+            "type": "go2chef.source.local",
+            "path": "examples/bundles/multi/scripts"
+          }
+        ]
+      }
+    }
+  ]
+}
