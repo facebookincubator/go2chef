@@ -147,6 +147,5 @@ var _ go2chef.Source = &Source{}
 var _ go2chef.SourceLoader = Loader
 
 func init() {
-	print("FUCK")
 	go2chef.RegisterSource(TypeName, Loader)
 }
