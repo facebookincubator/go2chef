@@ -90,7 +90,7 @@ func TestSource_DownloadToPathArchive(t *testing.T) {
 	if err := s.DownloadToPath(dir); err != nil {
 		t.Errorf("failed to download from %s to path %s: %s", ts.URL, dir, err)
 	}
-	dlpath := filepath.Join(dir, testfileName)
+	dlpath := filepath.Join(dir, "test", testfileName)
 	if data, err := ioutil.ReadFile(dlpath); err != nil {
 		t.Errorf("failed to read downloaded file from %s: %s", dlpath, err)
 	} else {

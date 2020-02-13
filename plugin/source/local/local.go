@@ -7,7 +7,7 @@ package local
 import (
 	"os"
 
-	"github.com/mholt/archiver"
+	"github.com/mholt/archiver/v3"
 
 	"github.com/facebookincubator/go2chef"
 	"github.com/mitchellh/mapstructure"
