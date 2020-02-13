@@ -5,12 +5,14 @@ package testutil
 */
 
 import (
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
-	"os/exec"
 	"path"
 	"path/filepath"
+
+	"github.com/mholt/archiver/v3"
 )
 
 // ZipDirHandler provides a zip-and-ship HTTP handler
@@ -20,21 +22,26 @@ type ZipDirHandler struct {
 
 func (z *ZipDirHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	archiveName := path.Base(req.URL.Path) + ".zip"
-	cmd := exec.Command("zip", "-r", "-", ".")
-	cmd.Dir = filepath.Join(z.Root, req.URL.Path)
-	cmd.Stdout = w
-	cmd.Stderr = os.Stderr
-	if err := cmd.Start(); err != nil {
-		log.Printf("error starting zip: %s", err)
+	zip := archiver.NewZip()
+
+	defer func() {
+		zip.Close()
+		if err := os.Remove(archiveName); err != nil {
+			log.Println(err, "removing", req.URL.Path)
+			return
+		}
+
+		log.Printf("zipped request %s", req.URL.Path)
+	}()
+
+	zip.Archive([]string{filepath.Join(z.Root, req.URL.Path)}, archiveName)
+	b, err := ioutil.ReadFile(archiveName)
+	if err != nil {
 		w.WriteHeader(500)
 		return
 	}
+
 	w.Header().Set("Content-Disposition", "attachment; filename="+archiveName+".zip")
 	w.Header().Set("Content-Type", "application/zip")
-
-	if err := cmd.Wait(); err != nil {
-		log.Printf("error zipping files: %s", err)
-		return
-	}
-	log.Printf("zipped request %s", req.URL.Path)
+	w.Write(b)
 }
