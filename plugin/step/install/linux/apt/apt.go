@@ -120,7 +120,7 @@ func (s *Step) Execute() error {
 	if !installed {
 		return s.installChef(installPackage)
 	}
-	s.logger.Infof("Chef version specified is already installed, not reinstalling")
+        s.logger.Infof("%s specified is already installed, not reinstalling", installPackage)
 	return nil
 }
 

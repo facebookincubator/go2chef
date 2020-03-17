@@ -1,45 +1,39 @@
-package s3
+package secretsmanager
 
 /*
 	Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 */
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
-	"github.com/aws/aws-sdk-go/aws/credentials"
-
-	"github.com/aws/aws-sdk-go/service/s3"
-
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/secretsmanager"
+
 	"github.com/facebookincubator/go2chef"
-	"github.com/mholt/archiver/v3"
 	"github.com/mitchellh/mapstructure"
 )
 
 // TypeName is the name of this source plugin
-const TypeName = "go2chef.source.s3"
+const TypeName = "go2chef.source.secretsmanager"
 
-// Source implements an AWS s3 source plugin that copies files
-// from a remote s3 bucket for use.
+// Source implements an AWS secretsmananger source plugin that
+// copies data stored in AWS secrets mananger into a file.
 type Source struct {
 	logger go2chef.Logger
 
 	SourceName  string `mapstructure:"name"`
 	Region      string `mapstructure:"region"`
-	Bucket      string `mapstructure:"bucket"`
-	Key         string `mapstructure:"key"`
+	SecretId    string `mapstructure:"secret_id"`
+	FileName    string `mapstructure:"filename"`
 	Credentials struct {
 		AccessKeyID     string `mapstructure:"access_key_id"`
 		SecretAccessKey string `mapstructure:"secret_access_key"`
 		Token           string `mapstructure:"token"`
 	}
-	Archive bool `mapstructure:"archive"`
 }
 
 func (s *Source) String() string {
@@ -61,24 +55,16 @@ func (s *Source) SetName(name string) {
 	s.SourceName = name
 }
 
-// DownloadToPath performs the actual copy of files to the working directory.
-// We copy rather than just setting downloadPath to avoid side effects from
-// steps affecting the original source location.
+// DownloadToPath performs reads the SecretString from secretsmanager and
+// delivers it to the specified file at the download path.
 func (s *Source) DownloadToPath(dlPath string) error {
 
+	s.logger.Debugf(0, "dlPath is: %s", dlPath)
 	if err := os.MkdirAll(dlPath, 0755); err != nil {
 		return err
 	}
 	s.logger.Debugf(0, "copy directory %s is ready", dlPath)
 
-	/*
-		AWS download:
-		- build credentials and init session
-		- create temporary file
-		- download s3 data to temp file
-		- if !archive, rename into output path
-		- else decompress archive to output path
-	*/
 	cfg := aws.NewConfig().WithRegion(s.Region)
 	if s.Credentials.AccessKeyID != "" && s.Credentials.SecretAccessKey != "" {
 		cfg = cfg.WithCredentials(
@@ -90,39 +76,34 @@ func (s *Source) DownloadToPath(dlPath string) error {
 		s.logger.Debugf(0, "failed to create AWS session: %s", err)
 		return err
 	}
-	dl := s3manager.NewDownloader(sess)
+	svc := secretsmanager.New(sess)
+	input := &secretsmanager.GetSecretValueInput{
+		SecretId: aws.String(s.SecretId),
+	}
+	outpath := filepath.Join(dlPath, s.FileName)
 
-	outfn := filepath.Join(dlPath, filepath.Base(s.Key))
-	tmpfh, err := ioutil.TempFile("", "")
+	result, err := svc.GetSecretValue(input)
 	if err != nil {
-		s.logger.Debugf(0, "failed to create output file for S3 download: %s", err)
+		s.logger.Debugf(0, "failed to retrieve secret %s: %s", s.SecretId, err)
 		return err
 	}
-	defer tmpfh.Close()
-	n, err := dl.Download(tmpfh, &s3.GetObjectInput{
-		Bucket: &s.Bucket,
-		Key:    &s.Key,
-	})
+
+	// Create the otuput file if it doesn't exist
+	fh, err := os.OpenFile(outpath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0400)
 	if err != nil {
-		s.logger.Debugf(0, "failed to download data from S3: %s", err)
+		s.logger.Debugf(0, "failed to create target (%s): %s", outpath, err)
 		return err
 	}
-	s.logger.Debugf(0, "downloaded %d bytes for %s:%s from S3", n, s.Bucket, s.Key)
-	tmpfh.Close()
+	defer fh.Close()
 
-	if !s.Archive {
-		if err := os.Rename(tmpfh.Name(), outfn); err != nil {
-			s.logger.Errorf("failed to relocate", outfn, dlPath)
-			return err
-		}
-		s.logger.Debugf(0, "relocated downloaded file from %s to %s", tmpfh.Name(), outfn)
-	} else {
-		if err := archiver.Unarchive(outfn, dlPath); err != nil {
-			s.logger.Errorf("failed to unarchive %s to dir %s", outfn, dlPath)
-			return err
-		}
+	_, err = fh.WriteString(*result.SecretString)
+	if err != nil {
+		s.logger.Debugf(0, "failed to write secret data: %s", err)
+		return err
 	}
+	fh.Close()
 
+	s.logger.Debugf(0, "Wrote secret (%s) to: %s", s.SecretId, outpath)
 	return nil
 }
 
@@ -137,6 +118,10 @@ func Loader(config map[string]interface{}) (go2chef.Source, error) {
 	}
 	if s.SourceName == "" {
 		s.SourceName = TypeName
+	}
+	// default to using the secret id as the filename if one wasn't provided
+	if s.FileName == "" {
+		s.FileName = s.SecretId
 	}
 	return s, nil
 }
