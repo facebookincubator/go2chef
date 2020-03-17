@@ -129,7 +129,7 @@ func (s *Step) Execute() error {
 		}
 		return s.installChefDNF(installPackage)
 	}
-	s.logger.Infof("Chef version specified is already installed, not reinstalling")
+        s.logger.Infof("%s specified is already installed, not reinstalling", installPackage)
 	return nil
 }
 

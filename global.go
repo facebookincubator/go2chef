@@ -84,7 +84,7 @@ type ErrChefAlreadyInstalled struct {
 
 // Error returns the error string
 func (e *ErrChefAlreadyInstalled) Error() string {
-	return "Chef is already installed: " + e.Installed + ", requested " + e.Requested
+	return "Package is already installed: " + e.Installed + ", requested " + e.Requested
 }
 
 // PathExists returns whether the given file or directory exists
