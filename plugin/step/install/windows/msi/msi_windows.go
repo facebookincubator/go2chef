@@ -27,6 +27,8 @@ import (
 	"github.com/facebookincubator/go2chef"
 
 	"golang.org/x/sys/windows/registry"
+
+	"golang.org/x/text/encoding/unicode"
 )
 
 // TypeName is the name of this plugin
@@ -43,7 +45,8 @@ type Step struct {
 	MSIMatch     string `mapstructure:"msi_match"`
 	ProgramMatch string `mapstructure:"program_match"`
 
-	MSIEXECTimeoutSeconds int `mapstructure:"msiexec_timeout_seconds"`
+	ExitCode              []int `mapstructure:"exit_code"`
+	MSIEXECTimeoutSeconds int   `mapstructure:"msiexec_timeout_seconds"`
 
 	RenameFolder bool `mapstructure:"rename_folder"`
 	Uninstall    bool `mapstructure:"uninstall"`
@@ -123,18 +126,37 @@ func (s *Step) installChef() error {
 	if err := cmd.Run(); err != nil {
 		// preserve exit error
 		xerr := err
+		expectedExitCode := false
 		if exit, ok := xerr.(*exec.ExitError); ok {
-			s.logger.Errorf("MSIEXEC exited with code %d", exit.ExitCode())
+			for _, c := range s.ExitCode {
+				if exit.ExitCode() == c {
+					expectedExitCode = true
+					break
+				}
+			}
+			if !expectedExitCode {
+				s.logger.Errorf("MSIEXEC exited with code %d", exit.ExitCode())
+			}
 		}
 
-		// pull logs
-		log, err := ioutil.ReadFile(logfile.Name())
-		if err != nil {
-			return err
-		}
-		s.logger.Errorf("MSIEXEC logs: %s", string(log))
+		if !expectedExitCode {
+			// pull logs
+			log, err := ioutil.ReadFile(logfile.Name())
+			if err != nil {
+				return err
+			}
+			// msiexec writes logs in UTF16-LE which outputs extra spaces. Convert it
+			// to UTF8 for more readable output.
+			decoder := unicode.UTF16(unicode.LittleEndian, unicode.UseBOM).NewDecoder()
+			utf8Log, err := decoder.Bytes(log)
+			if err != nil {
+				s.logger.Errorf("UNPRETTY MSIEXEC logs: %s", string(log))
+			} else {
+				s.logger.Errorf("MSIEXEC logs: %s", string(utf8Log))
+			}
 
-		return xerr
+			return xerr
+		}
 	}
 	return nil
 }
@@ -146,6 +168,7 @@ func Loader(config map[string]interface{}) (go2chef.Step, error) {
 		ProgramMatch:          "Chef Infra Client",
 		MSIMatch:              "chef-client.*\\.msi",
 		MSIEXECTimeoutSeconds: 300,
+		ExitCode:              []int{0, 3010},
 
 		logger:       go2chef.GetGlobalLogger(),
 		source:       nil,
