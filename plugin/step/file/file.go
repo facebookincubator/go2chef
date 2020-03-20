@@ -5,7 +5,6 @@ package file
 */
 
 import (
-	//	"os"
 
 	"github.com/facebookincubator/go2chef"
 	"github.com/mitchellh/mapstructure"
