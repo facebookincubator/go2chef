@@ -55,7 +55,7 @@ func (s *Source) SetName(name string) {
 	s.SourceName = name
 }
 
-// DownloadToPath performs reads the SecretString from secretsmanager and
+// DownloadToPath reads the SecretString from secretsmanager and
 // delivers it to the specified file at the download path.
 func (s *Source) DownloadToPath(dlPath string) error {
 
