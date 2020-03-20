@@ -88,7 +88,7 @@ func (s *Source) DownloadToPath(dlPath string) error {
 		return err
 	}
 
-	// Create the otuput file if it doesn't exist
+	// Create the output file if it doesn't exist
 	fh, err := os.OpenFile(outpath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0400)
 	if err != nil {
 		s.logger.Debugf(0, "failed to create target (%s): %s", outpath, err)
