@@ -6,5 +6,4 @@ package main
 
 import (
 	_ "github.com/facebookincubator/go2chef/plugin/step/install/windows/msi"
-	_ "github.com/facebookincubator/go2chef/plugin/step/winsanitycheck"
 )
