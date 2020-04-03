@@ -22,7 +22,7 @@ const TypeName = "go2chef.step.command"
 
 // Step implements a command execution step plugin
 type Step struct {
-	SName          string
+	SName          string `mapstructure:"name"`
 	Command        []string `mapstructure:"command"`
 	Env            map[string]string
 	TimeoutSeconds int      `mapstructure:"timeout_seconds"`

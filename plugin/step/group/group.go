@@ -22,7 +22,7 @@ const TypeName = "go2chef.step.group"
 // steps sequentially. If you're doing a bunch of steps you
 // probably want to use a `step_group` for it.
 type StepGroup struct {
-	GroupName string
+	GroupName string `mapstructure:"name"`
 	logger    go2chef.Logger
 	Steps     []go2chef.Step
 }
