@@ -9,12 +9,30 @@ import (
 	"strings"
 )
 
+type ExtraLoggingFields struct {
+	StepName    string
+	StepType    string
+	StepCount   int
+	ElapsedTime int
+}
+
 // Event provides a more structured way to log information from
 // go2chef plugins.
 type Event struct {
-	Event     string
-	Component string
-	Message   string
+	Event       string
+	Component   string
+	Message     string
+	ExtraFields *ExtraLoggingFields
+}
+
+// NewEvent returns a new event using the provided parameters
+func NewEventWithExtraFields(event, component, message string, extrafields *ExtraLoggingFields) *Event {
+	return &Event{
+		Event:       event,
+		Component:   component,
+		Message:     message,
+		ExtraFields: extrafields,
+	}
 }
 
 // NewEvent returns a new event using the provided parameters

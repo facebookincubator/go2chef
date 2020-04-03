@@ -6,6 +6,7 @@ package cli
 
 import (
 	"strconv"
+	"time"
 
 	"github.com/facebookincubator/go2chef/util/temp"
 
@@ -101,40 +102,65 @@ func (g *Go2ChefCLI) Run(argv []string) int {
 
 	defer temp.Cleanup(g.preserveTemp)
 
+	all_start := time.Now()
 	for i, step := range cfg.Steps {
-		eventStartStep(i)
+		start := time.Now()
+		eventStartStep(i, step.Name(), step.Type())
 		if err := step.Download(); err != nil {
-			eventFailStep(i, err)
+			eventFailStep(i, err, step.Name(), step.Type())
 			return 1
 		}
 		if err := step.Execute(); err != nil {
-			eventFailStep(i, err)
+			eventFailStep(i, err, step.Name(), step.Type())
 			return 1
 		}
-		eventFinishStep(i)
+		elapsed := int(time.Since(start).Seconds())
+		eventFinishStep(i, elapsed, step.Name(), step.Type())
 	}
 
+	all_elapsed := int(time.Since(all_start).Seconds())
+	eventFinishAllSteps(len(cfg.Steps), all_elapsed)
 	go2chef.ShutdownGlobalLogger()
 	return 0
 }
 
-func eventStartStep(idx int) {
+func eventStartStep(idx int, step_name, step_type string) {
 	logger.WriteEvent(&go2chef.Event{
-		Event:     "STEP_" + strconv.Itoa(idx) + "_START",
+		Event:     "STEP_" + strconv.Itoa(idx) + "_START " + step_type + ":" + "'" + step_name + "'",
 		Component: "go2chef.cli",
 	})
 }
-func eventFailStep(idx int, err error) {
+
+func eventFailStep(idx int, err error, step_name, step_type string) {
 	logger.WriteEvent(&go2chef.Event{
-		Event:     "STEP_" + strconv.Itoa(idx) + "_FAILURE",
+		Event:     "STEP_" + strconv.Itoa(idx) + "_FAILURE " + step_type + ":" + "'" + step_name + "'",
 		Component: "go2chef.cli",
 		Message:   err.Error(),
 	})
 }
-func eventFinishStep(idx int) {
+
+func eventFinishStep(idx, elapsed int, step_name, step_type string) {
 	logger.WriteEvent(&go2chef.Event{
-		Event:     "STEP_" + strconv.Itoa(idx) + "_COMPLETE",
+		Event:     "STEP_" + strconv.Itoa(idx) + "_COMPLETE " + step_type + ":" + "'" + step_name + "'",
 		Component: "go2chef.cli",
-		Message:   "completed successfully",
+		Message:   "completed successfully in " + strconv.Itoa(elapsed) + " second(s)",
+		ExtraFields: (&go2chef.ExtraLoggingFields{
+			StepName:    step_name,
+			StepType:    step_type,
+			ElapsedTime: elapsed,
+		}),
+	})
+}
+
+func eventFinishAllSteps(steps int, elapsed int) {
+	logger.WriteEvent(&go2chef.Event{
+		Event:     "ALL_STEPS_COMPLETE",
+		Component: "go2chef.cli",
+		Message:   strconv.Itoa(steps) + " step(s) completed successfully in " + strconv.Itoa(elapsed) + " second(s)",
+		ExtraFields: (&go2chef.ExtraLoggingFields{
+			StepName:    "All_Steps",
+			StepCount:   steps,
+			ElapsedTime: elapsed,
+		}),
 	})
 }
