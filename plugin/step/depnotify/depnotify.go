@@ -16,7 +16,7 @@ const TypeName = "go2chef.step.depnotify"
 
 // Step implements a depnotify execution step plugin
 type Step struct {
-	SName   string
+	SName   string `mapstructure:"name"`
 	Status  bool
 	Message string
 	logger  go2chef.Logger
