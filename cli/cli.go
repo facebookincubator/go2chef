@@ -101,6 +101,7 @@ func (g *Go2ChefCLI) Run(argv []string) int {
 	})
 
 	defer temp.Cleanup(g.preserveTemp)
+	defer go2chef.ShutdownGlobalLogger()
 
 	all_start := time.Now()
 	for i, step := range cfg.Steps {
@@ -120,7 +121,6 @@ func (g *Go2ChefCLI) Run(argv []string) int {
 
 	all_elapsed := int(time.Since(all_start).Seconds())
 	eventFinishAllSteps(len(cfg.Steps), all_elapsed)
-	go2chef.ShutdownGlobalLogger()
 	return 0
 }
 
