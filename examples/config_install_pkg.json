@@ -15,7 +15,8 @@
       "is_dmg": true,
       "source": {
         "type": "go2chef.source.http",
-        "url": "https://packages.chef.io/files/stable/chef/15.2.20/mac_os_x/10.14/chef-15.2.20-1.dmg"
+        "url": "https://packages.chef.io/files/stable/chef/16.1.16/mac_os_x/10.15/chef-16.1.16-1.dmg",
+        "sha256": "95e62c5824e361b12a30981cab677da1010d2f05b7e3f0c538d885881a4daf4a"
       }
     }
   ]
