@@ -5,6 +5,7 @@ package http
 */
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"mime"
@@ -15,6 +16,7 @@ import (
 
 	"github.com/facebookincubator/go2chef/plugin/lib/certs"
 
+	"github.com/facebookincubator/go2chef/util/hashfile"
 	"github.com/facebookincubator/go2chef/util/temp"
 
 	"github.com/facebookincubator/go2chef"
@@ -34,6 +36,7 @@ type Source struct {
 	ValidStatusCodes []int  `mapstructure:"valid_status_codes"`
 	Archive          bool   `mapstructure:"archive"`
 	OutputFilename   string `mapstructure:"output_filename"`
+	SHA256           string `mapstructure:"sha256"`
 }
 
 // String returns a string representation of this
@@ -137,6 +140,21 @@ func (s *Source) DownloadToPath(dlPath string) (err error) {
 	}
 	outputPath := filepath.Join(dlPath, outputFilename)
 
+	if s.SHA256 != "" {
+		s.logger.Debugf(1, "%s: sha256 was provided, validating %s", s.Name(), outputPath)
+		fileHash, err := hashfile.SHA256(tmpfile.Name())
+		if err != nil {
+			return err
+		}
+
+		s.logger.Debugf(1, "Calcluated hash is %s: ", fileHash)
+		s.logger.Debugf(1, "Provided hash: %s", s.SHA256)
+		// If the hash doesn't match what is provided, return an error.
+		if fileHash != s.SHA256 {
+			return errors.New("sha256 hashes do not match")
+		}
+	}
+
 	if s.Archive {
 		/*
 		  ARCHIVE MODE: If the request is for an archive (using `{"archive": true}` in config) then
@@ -188,6 +206,7 @@ func Loader(config map[string]interface{}) (go2chef.Source, error) {
 		"",
 		make([]int, 0),
 		false,
+		"",
 		"",
 	}
 	if err := mapstructure.Decode(config, s); err != nil {
