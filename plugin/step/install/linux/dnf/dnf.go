@@ -251,7 +251,7 @@ func (s *Step) installChefRPM(installPackage string) error {
 	instCtx, instCtxCancel := context.WithTimeout(context.Background(), time.Duration(s.InstallTimeoutSeconds)*time.Second)
 	defer instCtxCancel()
 
-	cmd := exec.CommandContext(instCtx, s.RPMBinary, "-Uvh", installPackage)
+	cmd := exec.CommandContext(instCtx, s.RPMBinary, "-Uvh", "--oldpackage", installPackage)
 	cmd.Stdin = nil
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
