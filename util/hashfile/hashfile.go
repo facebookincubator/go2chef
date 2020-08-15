@@ -1,5 +1,9 @@
 package hashfile
 
+/*
+	Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
+*/
+
 import (
 	"crypto/sha256"
 	"encoding/hex"
