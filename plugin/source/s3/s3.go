@@ -110,13 +110,13 @@ func (s *Source) DownloadToPath(dlPath string) error {
 	s.logger.Debugf(0, "downloaded %d bytes for %s:%s from S3", n, s.Bucket, s.Key)
 	tmpfh.Close()
 
-	if !s.Archive {
-		if err := os.Rename(tmpfh.Name(), outfn); err != nil {
-			s.logger.Errorf("failed to relocate", outfn, dlPath)
-			return err
-		}
-		s.logger.Debugf(0, "relocated downloaded file from %s to %s", tmpfh.Name(), outfn)
-	} else {
+	if err := os.Rename(tmpfh.Name(), outfn); err != nil {
+		s.logger.Errorf("failed to relocate", outfn, dlPath)
+		return err
+	}
+
+	s.logger.Debugf(0, "relocated downloaded file from %s to %s", tmpfh.Name(), outfn)
+	if s.Archive {
 		if err := archiver.Unarchive(outfn, dlPath); err != nil {
 			s.logger.Errorf("failed to unarchive %s to dir %s", outfn, dlPath)
 			return err
