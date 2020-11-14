@@ -7,7 +7,6 @@ package winsanitycheck
 import (
 	"errors"
 	"fmt"
-	"log"
 
 	"github.com/facebookincubator/go2chef"
 	"github.com/mitchellh/mapstructure"
@@ -41,7 +40,7 @@ func (s *SanityCheck) Download() error { return nil }
 
 // Execute performs the sanity checks
 func (s *SanityCheck) Execute() error {
-	log.Printf("executing sanity checks")
+	go2chef.GetGlobalLogger().Debugf(1, "executing sanity checks")
 	checks := make(map[string]CheckFn)
 	for _, en := range s.Enabled {
 		if sc, ok := sanityCheckRegistry[en]; ok {
@@ -51,7 +50,7 @@ func (s *SanityCheck) Execute() error {
 		}
 	}
 	for n, c := range checks {
-		log.Printf("running sanity check %s", n)
+		go2chef.GetGlobalLogger().Debugf(1, "running sanity check %s", n)
 		fix, err := c(s)
 		if err == ErrSanityCheckNeedsFix && fix != nil {
 			if err := fix(s); err != nil {
