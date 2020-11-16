@@ -147,8 +147,8 @@ func (s *Source) DownloadToPath(dlPath string) (err error) {
 			return err
 		}
 
-		s.logger.Debugf(1, "Calcluated hash is %s: ", fileHash)
-		s.logger.Debugf(1, "Provided hash: %s", s.SHA256)
+		s.logger.Debugf(1, "%s: calculated hash %s", s.Name(), fileHash)
+		s.logger.Debugf(1, "%s: provided hash %s", s.Name(), s.SHA256)
 		// If the hash doesn't match what is provided, return an error.
 		if fileHash != s.SHA256 {
 			return errors.New("sha256 hashes do not match")

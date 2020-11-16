@@ -8,7 +8,6 @@ package msi
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -54,6 +53,26 @@ type Step struct {
 	logger       go2chef.Logger
 	source       go2chef.Source
 	downloadPath string
+}
+
+func shellOut(s *Step, cm string, args []string) (err error) {
+	done := make(chan error)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*time.Duration(s.MSIEXECTimeoutSeconds))
+	defer cancel()
+
+	go func() {
+		cmd := exec.CommandContext(ctx, cm, args...)
+		s.logger.Debugf(1, "%v: %v %v", s.Name(), cm, strings.Join(args, " "))
+		done <- cmd.Run()
+	}()
+
+	select {
+	case err = <-done:
+	case <-ctx.Done():
+		return fmt.Errorf("%s timed out", s.Name())
+	}
+
+	return err
 }
 
 func (s *Step) String() string { return "<" + TypeName + ":" + s.StepName + ">" }
@@ -111,9 +130,6 @@ func (s *Step) installChef() error {
 		return err
 	}
 
-	instCtx, cancel := context.WithTimeout(context.Background(), time.Duration(s.MSIEXECTimeoutSeconds)*time.Second)
-	defer cancel()
-
 	// create a logfile for MSIEXEC
 	logfile, err := temp.File("", "")
 	if err != nil {
@@ -121,9 +137,7 @@ func (s *Step) installChef() error {
 	}
 	_ = logfile.Close()
 
-	cmd := exec.CommandContext(instCtx, "msiexec", "/qn", "/i", filepath.Join(s.downloadPath, msi), "/L*V", logfile.Name())
-
-	if err := cmd.Run(); err != nil {
+	if err := shellOut(s, "msiexec", []string{"/qn", "/i", filepath.Join(s.downloadPath, msi), "/L*V", logfile.Name()}); err != nil {
 		// preserve exit error
 		xerr := err
 		expectedExitCode := false
@@ -308,7 +322,11 @@ func (s *Step) renameFolder(timeout int) (err error) {
 		recycleBin     = `C:\$Recycle.Bin`
 	)
 
-	if info, _ := os.Stat(chefInstallDir); info == nil {
+	if info, err := os.Stat(chefInstallDir); info == nil {
+		if os.IsNotExist(err) {
+			s.logger.Debugf(1, "no chef remnants found")
+		}
+
 		return nil
 	}
 
@@ -326,7 +344,7 @@ func (s *Step) renameFolder(timeout int) (err error) {
 	return nil
 }
 
-// Use the information collected from the registry to uninstall the client.
+// Use the information collected from the registry to uninstall the client. Skip running the command if chef is already uninstalled.
 func (s *Step) uninstallChef(timeout int) error {
 	var (
 		chefInfo *chefInstallInfo
@@ -338,28 +356,14 @@ func (s *Step) uninstallChef(timeout int) error {
 	}
 
 	if chefInfo.UninstallGUID == "" {
+		s.logger.Debugf(1, "no uninstall guid found")
 		return nil
 	}
 
-	done := make(chan error)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*time.Duration(timeout))
-	defer cancel()
-
-	go func() {
-		args := []string{"/qn", "/x", chefInfo.UninstallGUID}
-		cmd := exec.CommandContext(ctx, "msiexec", args...)
-		s.logger.Debugf(1, "uninstalling chef: msiexec %#v", args)
-		done <- cmd.Run()
-	}()
-
-	select {
-	case err := <-done:
-		if err != nil {
-			return err
-		}
-	case <-ctx.Done():
-		return errors.New(`uninstall timed out`)
+	if !chefInfo.Installed {
+		s.logger.Debugf(1, "no chef install found")
+		return nil
 	}
 
-	return nil
+	return shellOut(s, "msiexec", []string{"/qn", "/x", chefInfo.UninstallGUID})
 }
