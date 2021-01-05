@@ -27,6 +27,10 @@ vet:
 linux:
 	GOOS=linux GOARCH=amd64 scripts/build.sh
 
+.PHONY: linux32
+linux32:
+	GOOS=linux GOARCH=386 scripts/build.sh
+
 .PHONY: darwin
 darwin:
 	GOOS=darwin GOARCH=amd64 scripts/build.sh

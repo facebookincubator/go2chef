@@ -6,7 +6,6 @@ package go2chef
 
 import (
 	"fmt"
-	"math"
 	"runtime"
 )
 
@@ -23,7 +22,7 @@ type MultiLogger struct {
 func NewMultiLogger(loggers []Logger) *MultiLogger {
 	return &MultiLogger{
 		loggers: loggers,
-		debug:   math.MaxInt64,
+		debug:   int(^uint(0) >> 1),
 		level:   LogLevelDebug,
 	}
 }
