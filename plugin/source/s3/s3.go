@@ -74,10 +74,10 @@ func (s *Source) DownloadToPath(dlPath string) error {
 	/*
 		AWS download:
 		- build credentials and init session
-		- create temporary file
+		- create temporary file in dlPath
 		- download s3 data to temp file
-		- if !archive, rename into output path
-		- else decompress archive to output path
+		- rename temporary file to output file
+		- if archive: decompress to dlPath
 	*/
 	cfg := aws.NewConfig().WithRegion(s.Region)
 	if s.Credentials.AccessKeyID != "" && s.Credentials.SecretAccessKey != "" {
@@ -93,7 +93,8 @@ func (s *Source) DownloadToPath(dlPath string) error {
 	dl := s3manager.NewDownloader(sess)
 
 	outfn := filepath.Join(dlPath, filepath.Base(s.Key))
-	tmpfh, err := ioutil.TempFile("", "")
+	// create tmpfile in dlPath to store S3 contents before Renaming to final location
+	tmpfh, err := ioutil.TempFile(dlPath, "")
 	if err != nil {
 		s.logger.Debugf(0, "failed to create output file for S3 download: %s", err)
 		return err
