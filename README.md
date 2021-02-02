@@ -12,6 +12,13 @@ go2chef has no runtime dependencies.
 
 ## Quickstart Example
 
+### Installing
+`go2chef` is packaged in Fedora as of Fedora 32. It can be installed with:
+
+```
+$ sudo dnf install go2chef
+```
+
 ### Building
 
 Build `go2chef` using `make` on Unix platforms:
