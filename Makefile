@@ -35,6 +35,10 @@ linux32:
 darwin:
 	GOOS=darwin GOARCH=amd64 scripts/build.sh
 
+.PHONY: darwinARM
+darwinARM:
+	GOOS=darwin GOARCH=arm64 scripts/build.sh
+
 .PHONY: windows
 windows:
 	GOOS=windows GOARCH=amd64 scripts/build.sh
