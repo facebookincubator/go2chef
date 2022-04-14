@@ -1,3 +1,8 @@
 .DS_Store
 .idea/
 build/
+
+# PackIt
+/golang-github-facebookincubator-go2chef*.src.rpm
+/golang-github-facebookincubator-go2chef.spec
+/go2chef-*.tar.gz
