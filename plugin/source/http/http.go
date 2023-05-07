@@ -128,8 +128,10 @@ func (s *Source) DownloadToPath(dlPath string) (err error) {
 	  - If not, check if the Content-Disposition has a download filename set and use that if so
 	*/
 	outputFilename := path.Base(req.URL.Path)
+
+	s.logger.Debugf(1, "Configured OutputFilename: '%s'",  s.OutputFilename)
 	if s.OutputFilename != "" {
-		outputFilename = dlPath
+		outputFilename = s.OutputFilename
 	} else {
 		_, params, err := mime.ParseMediaType(resp.Header.Get("Content-Disposition"))
 		if err == nil {
@@ -139,6 +141,7 @@ func (s *Source) DownloadToPath(dlPath string) (err error) {
 		}
 	}
 	outputPath := filepath.Join(dlPath, outputFilename)
+	s.logger.Debugf(1, "Final outputPath: '%s'", outputPath)
 
 	if s.SHA256 != "" {
 		s.logger.Debugf(1, "%s: sha256 was provided, validating %s", s.Name(), outputPath)
