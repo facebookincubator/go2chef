@@ -18,6 +18,7 @@ import (
 
 	"github.com/facebookincubator/go2chef/util/hashfile"
 	"github.com/facebookincubator/go2chef/util/temp"
+	"github.com/facebookincubator/go2chef/util"
 
 	"github.com/facebookincubator/go2chef"
 	"github.com/mholt/archiver/v3"
@@ -166,7 +167,7 @@ func (s *Source) DownloadToPath(dlPath string) (err error) {
 		_ = tmpfile.Close()
 		s.logger.Debugf(1, "%s: archive mode enabled, extracting %s to %s", s.Name(), tmpfile.Name(), dlPath)
 		extFilename := filepath.Join(filepath.Dir(tmpfile.Name()), outputFilename)
-		if err := os.Rename(tmpfile.Name(), extFilename); err != nil {
+		if err := util.MoveFile(tmpfile.Name(), extFilename); err != nil {
 			s.logger.Errorf("failed to relocate output")
 			return err
 		}
@@ -181,7 +182,7 @@ func (s *Source) DownloadToPath(dlPath string) (err error) {
 		*/
 		s.logger.Debugf(1, "%s: direct download to %s, rename to %s", s.Name(), tmpfile.Name(), outputPath)
 		_ = tmpfile.Close()
-		return os.Rename(tmpfile.Name(), outputPath)
+		return util.MoveFile(tmpfile.Name(), outputPath)
 	}
 	return nil
 }
