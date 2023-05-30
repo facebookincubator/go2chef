@@ -47,3 +47,23 @@ func PathExists(path string) bool {
 	_, err := os.Stat(path)
 	return !os.IsNotExist(err)
 }
+
+// MoveFile moves file
+func MoveFile(oldpath, newpath string) error {
+	r, err := os.Open(oldpath)
+	if err != nil {
+		return err
+	}
+	defer r.Close()
+	w, err := os.Create(newpath)
+	if err != nil {
+		return err
+	}
+	if _, err = w.ReadFrom(r); err != nil {
+		return err
+	}
+	if w.Close() != nil {
+		return err
+	}
+	return os.Remove(oldpath)
+}

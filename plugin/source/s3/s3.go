@@ -20,6 +20,7 @@ import (
 	"github.com/facebookincubator/go2chef"
 	"github.com/mholt/archiver/v3"
 	"github.com/mitchellh/mapstructure"
+	"github.com/facebookincubator/go2chef/util"
 )
 
 // TypeName is the name of this source plugin
@@ -111,7 +112,7 @@ func (s *Source) DownloadToPath(dlPath string) error {
 	s.logger.Debugf(0, "downloaded %d bytes for %s:%s from S3", n, s.Bucket, s.Key)
 	tmpfh.Close()
 
-	if err := os.Rename(tmpfh.Name(), outfn); err != nil {
+	if err := util.MoveFile(tmpfh.Name(), outfn); err != nil {
 		s.logger.Errorf("failed to relocate", outfn, dlPath)
 		return err
 	}
