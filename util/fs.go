@@ -62,7 +62,10 @@ func MoveFile(oldpath, newpath string) error {
 	if _, err = w.ReadFrom(r); err != nil {
 		return err
 	}
-	if w.Close() != nil {
+	if err = w.Close(); err != nil {
+		return err
+	}
+	if err = r.Close(); err != nil {
 		return err
 	}
 	return os.Remove(oldpath)
