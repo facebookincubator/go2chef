@@ -9,7 +9,7 @@ require (
 	github.com/otiai10/copy v1.4.2
 	github.com/pkg/sftp v1.12.0
 	github.com/spf13/pflag v1.0.5
-	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad
-	golang.org/x/sys v0.0.0-20220412211240-33da011f77ad
-	golang.org/x/text v0.3.5
+	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
+	golang.org/x/sys v0.0.0-20220722155257-8c9f86f7a55f
+	golang.org/x/text v0.3.8
 )
