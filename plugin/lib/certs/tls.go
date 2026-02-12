@@ -58,6 +58,7 @@ func (t *TLSConfiguration) GetTLSClientConf() (*tls.Config, error) {
 	return &tls.Config{
 		Certificates: t.ClientCerts,
 		RootCAs:      rcaPool,
+		InsecureSkipVerify: t.DisableCertVerification,
 	}, nil
 }
 
